@@ -9,10 +9,11 @@ import type {
   NonDeletedSceneElementsMap,
   OrderedExcalidrawElement,
   Ordered,
+  ExcalidrawRichTextElement,
 } from "../element/types";
 import { isNonDeletedElement } from "../element";
 import type { LinearElementEditor } from "../element/linearElementEditor";
-import { isFrameLikeElement } from "../element/typeChecks";
+import { isFrameLikeElement, isRichTextElement } from "../element/typeChecks";
 import { getSelectedElements } from "./selection";
 import type { AppState } from "../types";
 import type { Assert, SameType } from "../utility-types";
@@ -151,6 +152,9 @@ class Scene {
   private nonDeletedFramesLikes: readonly NonDeleted<ExcalidrawFrameLikeElement>[] =
     [];
   private frames: readonly ExcalidrawFrameLikeElement[] = [];
+  private nonDeletedRichTexts: readonly NonDeleted<ExcalidrawRichTextElement>[] =
+    [];
+  private richTexts: readonly ExcalidrawRichTextElement[] = [];
   private elementsMap = toBrandedType<SceneElementsMap>(new Map());
   private selectedElementsCache: {
     selectedElementIds: AppState["selectedElementIds"] | null;
@@ -243,6 +247,10 @@ class Scene {
     return this.nonDeletedFramesLikes;
   }
 
+  getNonDeletedRichTexts(): readonly NonDeleted<ExcalidrawRichTextElement>[] {
+    return this.nonDeletedRichTexts;
+  }
+
   getElement<T extends ExcalidrawElement>(id: T["id"]): T | null {
     return (this.elementsMap.get(id) as T | undefined) || null;
   }
@@ -293,6 +301,7 @@ class Scene {
         ? nextElements
         : Array.from(nextElements.values());
     const nextFrameLikes: ExcalidrawFrameLikeElement[] = [];
+    const nextRichTexts: ExcalidrawRichTextElement[] = [];
 
     validateIndicesThrottled(_nextElements);
 
@@ -301,6 +310,9 @@ class Scene {
     this.elements.forEach((element) => {
       if (isFrameLikeElement(element)) {
         nextFrameLikes.push(element);
+      }
+      if (isRichTextElement(element)) {
+        nextRichTexts.push(element);
       }
       this.elementsMap.set(element.id, element);
       Scene.mapElementToScene(element, this);
@@ -311,6 +323,9 @@ class Scene {
 
     this.frames = nextFrameLikes;
     this.nonDeletedFramesLikes = getNonDeletedElements(this.frames).elements;
+
+    this.richTexts = nextRichTexts;
+    this.nonDeletedRichTexts = getNonDeletedElements(this.richTexts).elements;
 
     this.triggerUpdate();
   }

@@ -311,7 +311,8 @@
     "magicframe": "Wireframe to code",
     "embeddable": "Web Embed",
     "selection": "Selection",
-    "iframe": "IFrame"
+    "iframe": "IFrame",
+    "richtext": "Rich text"
   },
   "headings": {
     "canvasActions": "Canvas actions",

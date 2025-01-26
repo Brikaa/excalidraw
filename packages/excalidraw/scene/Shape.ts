@@ -507,6 +507,7 @@ export const _generateElementShape = (
     case "frame":
     case "magicframe":
     case "text":
+    case "richtext":
     case "image": {
       const shape: ElementShapes[typeof element.type] = null;
       // we return (and cache) `null` to make sure we don't regenerate

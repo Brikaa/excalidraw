@@ -26,6 +26,7 @@ import type {
   PointBinding,
   FixedPointBinding,
   ExcalidrawFlowchartNodeElement,
+  ExcalidrawRichTextElement,
 } from "./types";
 
 export const isInitializedImageElement = (
@@ -64,6 +65,12 @@ export const isTextElement = (
   element: ExcalidrawElement | null,
 ): element is ExcalidrawTextElement => {
   return element != null && element.type === "text";
+};
+
+export const isRichTextElement = (
+  element: ExcalidrawElement | null,
+): element is ExcalidrawRichTextElement => {
+  return element != null && element.type === "richtext";
 };
 
 export const isFrameElement = (
@@ -227,6 +234,7 @@ export const isExcalidrawElement = (
     case "freedraw":
     case "line":
     case "frame":
+    case "richtext":
     case "magicframe":
     case "image":
     case "selection": {

@@ -83,6 +83,10 @@ export type ExcalidrawSelectionElement = _ExcalidrawElementBase & {
   type: "selection";
 };
 
+export type ExcalidrawRichTextElement = _ExcalidrawElementBase & {
+  type: "richtext";
+};
+
 export type ExcalidrawRectangleElement = _ExcalidrawElementBase & {
   type: "rectangle";
 };
@@ -203,6 +207,7 @@ export type ExcalidrawRectanguloidElement =
 export type ExcalidrawElement =
   | ExcalidrawGenericElement
   | ExcalidrawTextElement
+  | ExcalidrawRichTextElement
   | ExcalidrawLinearElement
   | ExcalidrawArrowElement
   | ExcalidrawFreeDrawElement

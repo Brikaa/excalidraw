@@ -1,25 +1,26 @@
-import type {
-  ExcalidrawElement,
-  ExcalidrawImageElement,
-  ExcalidrawTextElement,
-  ExcalidrawLinearElement,
-  ExcalidrawGenericElement,
-  NonDeleted,
-  TextAlign,
-  GroupId,
-  VerticalAlign,
-  Arrowhead,
-  ExcalidrawFreeDrawElement,
-  FontFamilyValues,
-  ExcalidrawTextContainer,
-  ExcalidrawFrameElement,
-  ExcalidrawEmbeddableElement,
-  ExcalidrawMagicFrameElement,
-  ExcalidrawIframeElement,
-  ElementsMap,
-  ExcalidrawArrowElement,
-  FixedSegment,
-  ExcalidrawElbowArrowElement,
+import {
+  type ExcalidrawElement,
+  type ExcalidrawImageElement,
+  type ExcalidrawTextElement,
+  type ExcalidrawLinearElement,
+  type ExcalidrawGenericElement,
+  type NonDeleted,
+  type TextAlign,
+  type GroupId,
+  type VerticalAlign,
+  type Arrowhead,
+  type ExcalidrawFreeDrawElement,
+  type FontFamilyValues,
+  type ExcalidrawTextContainer,
+  type ExcalidrawFrameElement,
+  type ExcalidrawEmbeddableElement,
+  type ExcalidrawMagicFrameElement,
+  type ExcalidrawIframeElement,
+  type ElementsMap,
+  type ExcalidrawArrowElement,
+  type FixedSegment,
+  type ExcalidrawElbowArrowElement,
+  type ExcalidrawRichTextElement,
 } from "./types";
 import {
   arrayToMap,
@@ -267,6 +268,15 @@ export const newTextElement = (
   );
 
   return textElement;
+};
+
+export const newRichTextElement = (opts: { x: number; y: number }) => {
+  const props = _newElementBase<ExcalidrawRichTextElement>("richtext", {
+    ...opts,
+    width: 8,
+    height: 8,
+  });
+  return newElementWith(props, {});
 };
 
 const getAdjustedDimensions = (

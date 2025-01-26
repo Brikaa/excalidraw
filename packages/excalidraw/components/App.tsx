@@ -145,6 +145,7 @@ import {
   newMagicFrameElement,
   newIframeElement,
   newArrowElement,
+  newRichTextElement,
 } from "../element/newElement";
 import {
   hasBoundTextElement,
@@ -5483,12 +5484,19 @@ class App extends React.Component<AppProps, AppState> {
         }
       }
 
-      this.startTextEditing({
-        sceneX,
-        sceneY,
-        insertAtParentCenter: !event.altKey,
-        container,
+      const element = newRichTextElement({ x: sceneX, y: sceneY });
+      console.log({ element });
+      this.scene.insertElement(element);
+      this.setState({
+        newElement: element,
+        multiElement: null,
       });
+      // this.startTextEditing({
+      //   sceneX,
+      //   sceneY,
+      //   insertAtParentCenter: !event.altKey,
+      //   container,
+      // });
     }
   };
 

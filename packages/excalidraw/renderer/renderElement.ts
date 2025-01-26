@@ -18,6 +18,7 @@ import {
   hasBoundTextElement,
   isMagicFrameElement,
   isImageElement,
+  isRichTextElement,
 } from "../element/typeChecks";
 import { getElementAbsoluteCoords } from "../element/bounds";
 import type { RoughCanvas } from "roughjs/bin/canvas";
@@ -515,6 +516,7 @@ const drawElementOnCanvas = (
         if (shouldTemporarilyAttach) {
           context.canvas.remove();
         }
+      } else if (isRichTextElement(element)) {
       } else {
         throw new Error(`Unimplemented type ${element.type}`);
       }
@@ -803,6 +805,7 @@ export const renderElement = (
     case "arrow":
     case "image":
     case "text":
+    case "richtext":
     case "iframe":
     case "embeddable": {
       // TODO investigate if we can do this in situ. Right now we need to call

@@ -29,6 +29,7 @@ import {
   newIframeElement,
   newImageElement,
   newMagicFrameElement,
+  newRichTextElement,
 } from "../../element/newElement";
 import type { AppState } from "../../types";
 import { getSelectedElements } from "../../scene/selection";
@@ -294,6 +295,9 @@ export class API {
         });
         element.width = width;
         element.height = height;
+        break;
+      case "richtext":
+        element = newRichTextElement(base);
         break;
       case "freedraw":
         element = newFreeDrawElement({

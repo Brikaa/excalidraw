@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useRef } from "react";
 import { flushSync } from "react-dom";
 
 import type { RoughCanvas } from "roughjs/bin/canvas";
@@ -1518,22 +1518,22 @@ class App extends React.Component<AppProps, AppState> {
         this.state,
       );
 
+      const isDarkTheme = this.state.theme === THEME.DARK;
+
       return (
-        <textarea
+        <div
+          contentEditable
           key={rt.id}
           style={{
-            position: "absolute",
-            // Positioning from bottom so that we don't to either
-            // calculate text height or adjust using transform (which)
-            // messes up input position when editing the frame name.
-            // This makes the positioning deterministic and we can calculate
-            // the same position when rendering to canvas / svg.
+            position: "fixed",
             top: `${y1}px`,
             left: `${x1}px`,
+            filter: isDarkTheme ? THEME_FILTER : "none",
             zIndex: "var(--zIndex-wysiwyg)",
             fontSize: "16px",
             color: rt.strokeColor,
             minWidth: rt.width,
+            minHeight: rt.height,
             whiteSpace: "nowrap",
           }}
           onPointerDown={(event) => this.handleCanvasPointerDown(event)}

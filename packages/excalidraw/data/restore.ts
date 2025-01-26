@@ -353,6 +353,7 @@ const restoreElement = (
     }
 
     // generic elements
+    case "richtext":
     case "ellipse":
     case "rectangle":
     case "diamond":

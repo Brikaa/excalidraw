@@ -1492,6 +1492,63 @@ class App extends React.Component<AppProps, AppState> {
     });
   };
 
+  private renderTextEditors = () => {
+    return this.scene.getNonDeletedRichTexts().map((rt) => {
+      if (
+        !isElementInViewport(
+          rt,
+          this.canvas.width / window.devicePixelRatio,
+          this.canvas.height / window.devicePixelRatio,
+          {
+            offsetLeft: this.state.offsetLeft,
+            offsetTop: this.state.offsetTop,
+            scrollX: this.state.scrollX,
+            scrollY: this.state.scrollY,
+            zoom: this.state.zoom,
+          },
+          this.scene.getNonDeletedElementsMap(),
+        )
+      ) {
+        // if rich text is not visible, don't render it
+        return null;
+      }
+
+      const { x: x1, y: y1 } = sceneCoordsToViewportCoords(
+        { sceneX: rt.x, sceneY: rt.y },
+        this.state,
+      );
+
+      return (
+        <textarea
+          key={rt.id}
+          style={{
+            position: "absolute",
+            // Positioning from bottom so that we don't to either
+            // calculate text height or adjust using transform (which)
+            // messes up input position when editing the frame name.
+            // This makes the positioning deterministic and we can calculate
+            // the same position when rendering to canvas / svg.
+            top: `${y1}px`,
+            left: `${x1}px`,
+            zIndex: "var(--zIndex-wysiwyg)",
+            fontSize: "16px",
+            color: rt.strokeColor,
+            minWidth: rt.width,
+            whiteSpace: "nowrap",
+          }}
+          onPointerDown={(event) => this.handleCanvasPointerDown(event)}
+          onWheel={(event) => this.handleWheel(event)}
+          onContextMenu={this.handleCanvasContextMenu}
+          onDoubleClick={() => {
+            this.setState({
+              editingFrame: rt.id,
+            });
+          }}
+        />
+      );
+    });
+  };
+
   private toggleOverscrollBehavior(event: React.PointerEvent) {
     // when pointer inside editor, disable overscroll behavior to prevent
     // panning to trigger history back/forward on MacOS Chrome
@@ -1604,7 +1661,9 @@ class App extends React.Component<AppProps, AppState> {
                           {this.props.children}
                         </LayerUI>
 
-                        <div className="excalidraw-textEditorContainer" />
+                        <div className="excalidraw-textEditorContainer">
+                          {this.renderTextEditors()}
+                        </div>
                         <div className="excalidraw-contextMenuContainer" />
                         <div className="excalidraw-eye-dropper-container" />
                         <SVGLayer
@@ -5485,7 +5544,6 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       const element = newRichTextElement({ x: sceneX, y: sceneY });
-      console.log({ element });
       this.scene.insertElement(element);
       // this.startTextEditing({
       //   sceneX,
@@ -10808,7 +10866,11 @@ class App extends React.Component<AppProps, AppState> {
 
   private handleWheel = withBatchedUpdates(
     (
-      event: WheelEvent | React.WheelEvent<HTMLDivElement | HTMLCanvasElement>,
+      event:
+        | WheelEvent
+        | React.WheelEvent<
+            HTMLDivElement | HTMLCanvasElement | HTMLTextAreaElement
+          >,
     ) => {
       // if not scrolling on canvas/wysiwyg, ignore
       if (

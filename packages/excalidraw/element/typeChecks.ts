@@ -164,6 +164,7 @@ export const isBindableElement = (
       element.type === "embeddable" ||
       element.type === "frame" ||
       element.type === "magicframe" ||
+      element.type === "richtext" ||
       (element.type === "text" && !element.containerId))
   );
 };
@@ -180,6 +181,7 @@ export const isRectanguloidElement = (
       element.type === "embeddable" ||
       element.type === "frame" ||
       element.type === "magicframe" ||
+      element.type === "richtext" ||
       (element.type === "text" && !element.containerId))
   );
 };
@@ -194,6 +196,7 @@ export const isRectangularElement = (
     (element.type === "rectangle" ||
       element.type === "image" ||
       element.type === "text" ||
+      element.type === "richtext" ||
       element.type === "iframe" ||
       element.type === "embeddable" ||
       element.type === "frame" ||

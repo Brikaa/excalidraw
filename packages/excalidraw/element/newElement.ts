@@ -273,8 +273,8 @@ export const newTextElement = (
 export const newRichTextElement = (opts: { x: number; y: number }) => {
   const props = _newElementBase<ExcalidrawRichTextElement>("richtext", {
     ...opts,
-    width: 8,
-    height: 8,
+    width: 100,
+    height: 32,
   });
   return newElementWith(props, {});
 };

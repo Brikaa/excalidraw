@@ -5476,10 +5476,6 @@ class App extends React.Component<AppProps, AppState> {
       const element = newRichTextElement({ x: sceneX, y: sceneY });
       console.log({ element });
       this.scene.insertElement(element);
-      this.setState({
-        newElement: element,
-        multiElement: null,
-      });
       // this.startTextEditing({
       //   sceneX,
       //   sceneY,

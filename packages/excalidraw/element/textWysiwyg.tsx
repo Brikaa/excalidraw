@@ -581,7 +581,7 @@ export const textWysiwyg = ({
 
   const cleanup = () => {
     // remove events to ensure they don't late-fire
-    editable.onblur = null;
+    // editable.onblur = null;
     editable.oninput = null;
     editable.onkeydown = null;
 
@@ -593,7 +593,7 @@ export const textWysiwyg = ({
     window.removeEventListener("wheel", stopEvent, true);
     window.removeEventListener("pointerdown", onPointerDown);
     window.removeEventListener("pointerup", bindBlurEvent);
-    window.removeEventListener("blur", handleSubmit);
+    // window.removeEventListener("blur", handleSubmit);
     window.removeEventListener("beforeunload", handleSubmit);
     unbindUpdate();
     unbindOnScroll();
@@ -614,7 +614,7 @@ export const textWysiwyg = ({
       target.classList.contains("properties-trigger");
 
     setTimeout(() => {
-      editable.onblur = handleSubmit;
+      // editable.onblur = handleSubmit;
 
       // case: clicking on the same property → no change → no update → no focus
       if (!isPropertiesTrigger) {
@@ -624,11 +624,11 @@ export const textWysiwyg = ({
   };
 
   const temporarilyDisableSubmit = () => {
-    editable.onblur = null;
+    // editable.onblur = null;
     window.addEventListener("pointerup", bindBlurEvent);
     // handle edge-case where pointerup doesn't fire e.g. due to user
     // alt-tabbing away
-    window.addEventListener("blur", handleSubmit);
+    // window.addEventListener("blur", handleSubmit);
   };
 
   // prevent blur when changing properties from the menu

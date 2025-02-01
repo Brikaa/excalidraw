@@ -1515,6 +1515,7 @@ class App extends React.Component<AppProps, AppState> {
     return (
       <div
         contentEditable
+        data-type="wysiwyg"
         key={rt.id}
         style={{
           position: "fixed",

@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 
 import type { RoughCanvas } from "roughjs/bin/canvas";
@@ -191,6 +191,7 @@ import type {
   MagicGenerationData,
   ExcalidrawNonSelectionElement,
   ExcalidrawArrowElement,
+  ExcalidrawRichTextElement,
 } from "../element/types";
 import { getCenter, getDistance } from "../gesture";
 import {
@@ -466,6 +467,8 @@ import { cropElement } from "../element/cropElement";
 import { wrapText } from "../element/textWrapping";
 import { actionCopyElementLink } from "../actions/actionElementLink";
 import { isElementLink, parseElementLinkFromURL } from "../element/elementLink";
+import { createEditor } from "lexical";
+import type { LexicalEditor } from "lexical";
 
 const AppContext = React.createContext<AppClassProperties>(null!);
 const AppPropsContext = React.createContext<AppProps>(null!);
@@ -1492,6 +1495,51 @@ class App extends React.Component<AppProps, AppState> {
     });
   };
 
+  private richEditorCache: Record<string, LexicalEditor> = {};
+
+  private RichEditor = (props: { rt: ExcalidrawRichTextElement }) => {
+    const { rt } = props;
+    const contentEditableRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+      if (!this.richEditorCache[rt.id]) {
+        const editor = createEditor();
+        editor.setRootElement(contentEditableRef.current);
+      }
+    }, [rt.id]);
+    const { x: x1, y: y1 } = sceneCoordsToViewportCoords(
+      { sceneX: rt.x, sceneY: rt.y },
+      this.state,
+    );
+
+    const isDarkTheme = this.state.theme === THEME.DARK;
+    return (
+      <div
+        contentEditable
+        key={rt.id}
+        style={{
+          position: "fixed",
+          top: `${y1}px`,
+          left: `${x1}px`,
+          filter: isDarkTheme ? THEME_FILTER : "none",
+          zIndex: "var(--zIndex-wysiwyg)",
+          fontSize: "16px",
+          color: rt.strokeColor,
+          minWidth: rt.width,
+          minHeight: rt.height,
+          whiteSpace: "nowrap",
+        }}
+        onPointerDown={(event) => this.handleCanvasPointerDown(event)}
+        onWheel={(event) => this.handleWheel(event)}
+        onContextMenu={this.handleCanvasContextMenu}
+        onDoubleClick={() => {
+          this.setState({
+            editingFrame: rt.id,
+          });
+        }}
+      />
+    );
+  };
+
   private renderTextEditors = () => {
     return this.scene.getNonDeletedRichTexts().map((rt) => {
       if (
@@ -1513,39 +1561,7 @@ class App extends React.Component<AppProps, AppState> {
         return null;
       }
 
-      const { x: x1, y: y1 } = sceneCoordsToViewportCoords(
-        { sceneX: rt.x, sceneY: rt.y },
-        this.state,
-      );
-
-      const isDarkTheme = this.state.theme === THEME.DARK;
-
-      return (
-        <div
-          contentEditable
-          key={rt.id}
-          style={{
-            position: "fixed",
-            top: `${y1}px`,
-            left: `${x1}px`,
-            filter: isDarkTheme ? THEME_FILTER : "none",
-            zIndex: "var(--zIndex-wysiwyg)",
-            fontSize: "16px",
-            color: rt.strokeColor,
-            minWidth: rt.width,
-            minHeight: rt.height,
-            whiteSpace: "nowrap",
-          }}
-          onPointerDown={(event) => this.handleCanvasPointerDown(event)}
-          onWheel={(event) => this.handleWheel(event)}
-          onContextMenu={this.handleCanvasContextMenu}
-          onDoubleClick={() => {
-            this.setState({
-              editingFrame: rt.id,
-            });
-          }}
-        />
-      );
+      return <this.RichEditor rt={rt} key={rt.id} />;
     });
   };
 

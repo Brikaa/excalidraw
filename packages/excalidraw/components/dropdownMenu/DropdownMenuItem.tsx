@@ -61,15 +61,15 @@ const DropdownMenuItem = ({
       ref={ref}
       value={value}
       onClick={handleClick}
-      className={getDropdownMenuItemClassName(className, selected, hovered)}
+      className={getDropdownMenuItemClassName(
+        className,
+        selected,
+        hovered,
+        hasNotification,
+      )}
       title={rest.title ?? rest["aria-label"]}
     >
-      <MenuItemContent
-        textStyle={textStyle}
-        icon={icon}
-        shortcut={shortcut}
-        hasNotification={hasNotification}
-      >
+      <MenuItemContent textStyle={textStyle} icon={icon} shortcut={shortcut}>
         {children}
       </MenuItemContent>
     </button>

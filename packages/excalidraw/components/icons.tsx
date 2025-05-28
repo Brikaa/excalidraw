@@ -1970,14 +1970,6 @@ export const searchIcon = createIcon(
   tablerIconProps,
 );
 
-export const bubbleIcon = createIcon(
-  <g>
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <circle cx="12" cy="12" r="8" fill="blue" stroke="none" />
-  </g>,
-  tablerIconProps,
-);
-
 export const clockIcon = createIcon(
   <g strokeWidth={1.5}>
     <path stroke="none" d="M0 0h24v24H0z" fill="none" />

@@ -371,6 +371,7 @@ const ExcalidrawWrapper = () => {
   const [isCollaborating] = useAtomWithInitialValue(isCollaboratingAtom, () => {
     return isCollaborationLink(window.location.href);
   });
+  const [shouldSave, setShouldSave] = useState(false);
   const collabError = useAtomValue(collabErrorIndicatorAtom);
 
   useHandleLibrary({
@@ -396,6 +397,16 @@ const ExcalidrawWrapper = () => {
       forceRefresh((prev) => !prev);
     }
   }, [excalidrawAPI]);
+
+  useEffect(() => {
+    if (!excalidrawAPI) {
+      return;
+    }
+    const cancel = excalidrawAPI.onChange((_, state) => {
+      setShouldSave(!state.fileHandle);
+    });
+    return cancel;
+  });
 
   useEffect(() => {
     if (!excalidrawAPI || (!isCollabDisabled && !collabAPI)) {
@@ -872,6 +883,7 @@ const ExcalidrawWrapper = () => {
         }}
       >
         <AppMainMenu
+          shouldSave={shouldSave}
           onCollabDialogOpen={onCollabDialogOpen}
           isCollaborating={isCollaborating}
           isCollabEnabled={!isCollabDisabled}

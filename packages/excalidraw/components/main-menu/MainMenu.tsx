@@ -2,6 +2,8 @@ import React from "react";
 
 import { composeEventHandlers } from "@excalidraw/common";
 
+import clsx from "clsx";
+
 import { useTunnels } from "../../context/tunnels";
 import { useUIAppState } from "../../context/ui-appState";
 import { t } from "../../i18n";
@@ -19,12 +21,14 @@ const MainMenu = Object.assign(
     ({
       children,
       onSelect,
+      hasNotification = false,
     }: {
       children?: React.ReactNode;
       /**
        * Called when any menu item is selected (clicked on).
        */
       onSelect?: (event: Event) => void;
+      hasNotification?: boolean;
     }) => {
       const { MainMenuTunnel } = useTunnels();
       const device = useDevice();
@@ -44,7 +48,7 @@ const MainMenu = Object.assign(
                 });
               }}
               data-testid="main-menu-trigger"
-              className="main-menu-trigger"
+              className={clsx("main-menu-trigger", { hasNotification })}
             >
               {HamburgerMenuIcon}
             </DropdownMenu.Trigger>

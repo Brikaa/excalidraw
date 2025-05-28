@@ -19,12 +19,13 @@ export const AppMainMenu: React.FC<{
   onCollabDialogOpen: () => any;
   isCollaborating: boolean;
   isCollabEnabled: boolean;
+  shouldSave: boolean;
   theme: Theme | "system";
   setTheme: (theme: Theme | "system") => void;
   refresh: () => void;
 }> = React.memo((props) => {
   return (
-    <MainMenu>
+    <MainMenu hasNotification={props.shouldSave}>
       <MainMenu.DefaultItems.LoadScene />
       <MainMenu.DefaultItems.SaveToActiveFile />
       <MainMenu.DefaultItems.Export />

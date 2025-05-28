@@ -321,11 +321,16 @@ export const ChangeCanvasBackground = () => {
 };
 ChangeCanvasBackground.displayName = "ChangeCanvasBackground";
 
-export const Export = () => {
+export const Export = ({
+  hasNotification = false,
+}: {
+  hasNotification?: boolean;
+}) => {
   const { t } = useI18n();
   const setAppState = useExcalidrawSetAppState();
   return (
     <DropdownMenuItem
+      hasNotification={hasNotification}
       icon={ExportIcon}
       onSelect={() => {
         setAppState({ openDialog: { name: "jsonExport" } });

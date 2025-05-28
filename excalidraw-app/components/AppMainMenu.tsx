@@ -28,7 +28,7 @@ export const AppMainMenu: React.FC<{
     <MainMenu hasNotification={props.shouldSave}>
       <MainMenu.DefaultItems.LoadScene />
       <MainMenu.DefaultItems.SaveToActiveFile />
-      <MainMenu.DefaultItems.Export />
+      <MainMenu.DefaultItems.Export hasNotification={props.shouldSave} />
       <MainMenu.DefaultItems.SaveAsImage />
       {props.isCollabEnabled && (
         <MainMenu.DefaultItems.LiveCollaborationTrigger

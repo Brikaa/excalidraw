@@ -1,3 +1,5 @@
+import { bubbleIcon } from "@excalidraw/excalidraw/components/icons";
+
 import { useDevice } from "../App";
 
 import type { JSX } from "react";
@@ -7,15 +9,20 @@ const MenuItemContent = ({
   icon,
   shortcut,
   children,
+  hasNotification = false,
 }: {
   icon?: JSX.Element;
   shortcut?: string;
   textStyle?: React.CSSProperties;
+  hasNotification?: boolean;
   children: React.ReactNode;
 }) => {
   const device = useDevice();
   return (
     <>
+      {hasNotification && (
+        <div className="dropdown-menu-item__icon">{bubbleIcon}</div>
+      )}
       {icon && <div className="dropdown-menu-item__icon">{icon}</div>}
       <div style={textStyle} className="dropdown-menu-item__text">
         {children}

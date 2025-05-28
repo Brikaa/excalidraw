@@ -207,7 +207,7 @@
       }
     }
 
-    &.hasNotification {
+    &--notification {
       &:before {
         content: "";
         border-radius: 50%;

@@ -7,12 +7,14 @@ const MenuTrigger = ({
   children,
   onToggle,
   title,
+  hasNotification = false,
   ...rest
 }: {
   className?: string;
   children: React.ReactNode;
   onToggle: () => void;
   title?: string;
+  hasNotification?: boolean;
 } & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onSelect">) => {
   const device = useDevice();
   const classNames = clsx(
@@ -20,6 +22,7 @@ const MenuTrigger = ({
     "zen-mode-transition",
     {
       "dropdown-menu-button--mobile": device.editor.isMobile,
+      "dropdown-menu-button--notification": hasNotification,
     },
   ).trim();
   return (

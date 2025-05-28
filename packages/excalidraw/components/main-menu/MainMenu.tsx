@@ -2,8 +2,6 @@ import React from "react";
 
 import { composeEventHandlers } from "@excalidraw/common";
 
-import clsx from "clsx";
-
 import { useTunnels } from "../../context/tunnels";
 import { useUIAppState } from "../../context/ui-appState";
 import { t } from "../../i18n";
@@ -48,7 +46,8 @@ const MainMenu = Object.assign(
                 });
               }}
               data-testid="main-menu-trigger"
-              className={clsx("main-menu-trigger", { hasNotification })}
+              className={"main-menu-trigger"}
+              hasNotification={hasNotification}
             >
               {HamburgerMenuIcon}
             </DropdownMenu.Trigger>

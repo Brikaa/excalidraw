@@ -110,12 +110,12 @@
         &:before {
           content: "";
           border-radius: 50%;
-          width: 12px;
-          height: 12px;
-          background-color: blue;
+          width: 10px;
+          height: 10px;
+          background-color: var(--color-warning-darker);
           position: absolute;
-          top: 0;
-          left: 0;
+          top: 2px;
+          left: 2px;
         }
       }
 
@@ -213,7 +213,7 @@
         border-radius: 50%;
         width: 15px;
         height: 15px;
-        background-color: blue;
+        background-color: var(--color-warning-darker);
         position: absolute;
         top: -4px;
         right: -4px;

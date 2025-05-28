@@ -402,11 +402,13 @@ const ExcalidrawWrapper = () => {
     if (!excalidrawAPI) {
       return;
     }
-    const cancel = excalidrawAPI.onChange((_, state) => {
-      setShouldSave(!state.fileHandle);
+    const unsub = excalidrawAPI.onChange((elements, state) => {
+      setShouldSave(
+        !state.fileHandle && excalidrawAPI.getSceneElements().length > 0,
+      );
     });
-    return cancel;
-  });
+    return unsub;
+  }, [excalidrawAPI]);
 
   useEffect(() => {
     if (!excalidrawAPI || (!isCollabDisabled && !collabAPI)) {

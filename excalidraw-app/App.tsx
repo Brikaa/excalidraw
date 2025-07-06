@@ -140,6 +140,7 @@ import { ExcalidrawPlusIframeExport } from "./ExcalidrawPlusIframeExport";
 import "./index.scss";
 
 import { SaveReminder } from "./save-reminder/SaveReminder";
+import { AutoSave } from "./auto-save/AutoSave";
 
 import type { CollabAPI } from "./collab/Collab";
 
@@ -954,11 +955,14 @@ const ExcalidrawWrapper = () => {
           <Collab excalidrawAPI={excalidrawAPI} />
         )}
         {excalidrawAPI && !isCollaborating && (
-          <SaveReminder
-            excalidrawAPI={excalidrawAPI}
-            onSyncDataSubscriber={onSyncDataSubscriber}
-            onLoadFromLinkSubscriber={onLoadFromLinkSubscriber}
-          />
+          <>
+            <SaveReminder
+              excalidrawAPI={excalidrawAPI}
+              onSyncDataSubscriber={onSyncDataSubscriber}
+              onLoadFromLinkSubscriber={onLoadFromLinkSubscriber}
+            />
+            <AutoSave excalidrawAPI={excalidrawAPI} />
+          </>
         )}
 
         <ShareDialog

@@ -256,3 +256,20 @@ export class LibraryLocalStorageMigrationAdapter {
     localStorage.removeItem(STORAGE_KEYS.__LEGACY_LOCAL_STORAGE_LIBRARY);
   }
 }
+
+export class FileHandleIDB {
+  private static idbName = "file-handles";
+  private static key = "file-handle";
+
+  private static store = createStore(
+    `${FileHandleIDB.idbName}-db`,
+    `${FileHandleIDB.idbName}-store`,
+  );
+
+  static save(fileHandle: FileSystemHandle | null) {
+    if (fileHandle === null) {
+      del(FileHandleIDB.key, FileHandleIDB.store);
+    }
+    return set(FileHandleIDB.key, fileHandle, FileHandleIDB.store);
+  }
+}

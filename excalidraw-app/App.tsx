@@ -119,6 +119,7 @@ import {
 
 import { loadFilesFromFirebase } from "./data/firebase";
 import {
+  FileHandleIDB,
   LibraryIndexedDBAdapter,
   LibraryLocalStorageMigrationAdapter,
   LocalData,
@@ -491,12 +492,22 @@ const ExcalidrawWrapper = () => {
       }
     };
 
+    const loadFileHandle = () => {
+      FileHandleIDB.load().then((fileHandle) => {
+        console.log({ fileHandle });
+        excalidrawAPI.updateScene({ appState: { fileHandle } });
+      });
+    };
+
     initializeScene({
       collabAPI,
       excalidrawAPI,
       onLoadFromLinkEmitter: onLoadFromLinkEmitter.current,
     }).then(async (data) => {
       loadImages(data, /* isInitialLoad */ true);
+      if (!data.isExternalScene) {
+        loadFileHandle();
+      }
       initialStatePromiseRef.current.promise.resolve(data.scene);
     });
 
@@ -955,15 +966,14 @@ const ExcalidrawWrapper = () => {
           <Collab excalidrawAPI={excalidrawAPI} />
         )}
         {excalidrawAPI && !isCollaborating && (
-          <>
-            <SaveReminder
-              excalidrawAPI={excalidrawAPI}
-              onSyncDataSubscriber={onSyncDataSubscriber}
-              onLoadFromLinkSubscriber={onLoadFromLinkSubscriber}
-            />
-            <AutoSave excalidrawAPI={excalidrawAPI} />
-          </>
+          <SaveReminder
+            excalidrawAPI={excalidrawAPI}
+            onSyncDataSubscriber={onSyncDataSubscriber}
+            onLoadFromLinkSubscriber={onLoadFromLinkSubscriber}
+          />
         )}
+
+        {excalidrawAPI && <AutoSave excalidrawAPI={excalidrawAPI} />}
 
         <ShareDialog
           collabAPI={collabAPI}

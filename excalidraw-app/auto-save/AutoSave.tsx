@@ -13,7 +13,7 @@ export const AutoSave = memo((props: AutoSaveProps) => {
 
   useEffect(() => {
     const unsubOnChange = excalidrawAPI.onChange(async (_, appState) => {
-      if (appState.fileHandle !== fileHandle.current) {
+      if (appState.fileHandle !== fileHandle.current && !appState.isLoading) {
         const res = await FileHandleIDB.save(appState.fileHandle);
         fileHandle.current = appState.fileHandle;
         console.log("Saved", res);

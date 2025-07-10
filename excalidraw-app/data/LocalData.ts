@@ -37,6 +37,8 @@ import type {
 } from "@excalidraw/excalidraw/types";
 import type { MaybePromise } from "@excalidraw/common/utility-types";
 
+import type { FileSystemHandle } from "@excalidraw/excalidraw/data/filesystem";
+
 import { SAVE_TO_LOCAL_STORAGE_TIMEOUT, STORAGE_KEYS } from "../app_constants";
 
 import { FileManager } from "./FileManager";
@@ -271,5 +273,14 @@ export class FileHandleIDB {
       del(FileHandleIDB.key, FileHandleIDB.store);
     }
     return set(FileHandleIDB.key, fileHandle, FileHandleIDB.store);
+  }
+
+  static async load() {
+    const IDBData = await get<FileSystemHandle>(
+      FileHandleIDB.key,
+      FileHandleIDB.store,
+    );
+
+    return IDBData || null;
   }
 }

@@ -183,7 +183,10 @@ export const getFormValue = function <T extends Primitive>(
   }
 
   if (!ret) {
-    const hasSelection = isSomeElementSelected(nonDeletedElements, app.pendingState);
+    const hasSelection = isSomeElementSelected(
+      nonDeletedElements,
+      app.pendingState,
+    );
 
     if (hasSelection) {
       const selectedElements = app.scene.getSelectedElements(app.pendingState);

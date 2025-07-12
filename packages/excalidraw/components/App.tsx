@@ -1,7 +1,6 @@
 import clsx from "clsx";
 import throttle from "lodash.throttle";
 import React, { useContext } from "react";
-import { flushSync } from "react-dom";
 import rough from "roughjs/bin/rough";
 import { nanoid } from "nanoid";
 
@@ -4976,20 +4975,14 @@ class App extends React.Component<AppProps, AppState> {
             ? element.containerId
             : element.id;
 
-          // needed to ensure state is updated before "finalize" action
-          // that's invoked on keyboard-submit as well
-          // TODO either move this into finalize as well, or handle all state
-          // updates in one place, skipping finalize action
-          flushSync(() => {
-            this.setState({
-              selectedElementIds: makeNextSelectedElementIds(
-                {
-                  ...this.pendingState.selectedElementIds,
-                  [elementIdToSelect]: true,
-                },
-                this.pendingState,
-              ),
-            });
+          this.setState({
+            selectedElementIds: makeNextSelectedElementIds(
+              {
+                ...this.pendingState.selectedElementIds,
+                [elementIdToSelect]: true,
+              },
+              this.pendingState,
+            ),
           });
         }
         if (isDeleted) {
@@ -5001,11 +4994,9 @@ class App extends React.Component<AppProps, AppState> {
           this.store.scheduleCapture();
         }
 
-        flushSync(() => {
-          this.setState({
-            newElement: null,
-            editingTextElement: null,
-          });
+        this.setState({
+          newElement: null,
+          editingTextElement: null,
         });
 
         if (this.pendingState.activeTool.locked) {
@@ -5906,13 +5897,8 @@ class App extends React.Component<AppProps, AppState> {
         editingLinearElement &&
         editingLinearElement !== this.pendingState.editingLinearElement
       ) {
-        // Since we are reading from previous state which is not possible with
-        // automatic batching in React 18 hence using flush sync to synchronously
-        // update the state. Check https://github.com/excalidraw/excalidraw/pull/5508 for more details.
-        flushSync(() => {
-          this.setState({
-            editingLinearElement,
-          });
+        this.setState({
+          editingLinearElement,
         });
       }
       if (editingLinearElement?.lastUncommittedPoint != null) {
@@ -5922,9 +5908,7 @@ class App extends React.Component<AppProps, AppState> {
         );
       } else {
         // causes stack overflow if not sync
-        flushSync(() => {
-          this.setState({ suggestedBindings: [] });
-        });
+        this.setState({ suggestedBindings: [] });
       }
     }
 
@@ -8152,16 +8136,12 @@ class App extends React.Component<AppProps, AppState> {
           this.scene,
         );
 
-        flushSync(() => {
-          if (this.pendingState.selectedLinearElement) {
-            this.setState({
-              selectedLinearElement: {
-                ...this.pendingState.selectedLinearElement,
-                segmentMidPointHoveredCoords: ret.segmentMidPointHoveredCoords,
-                pointerDownState: ret.pointerDownState,
-              },
-            });
-          }
+        this.setState({
+          selectedLinearElement: {
+            ...this.pendingState.selectedLinearElement,
+            segmentMidPointHoveredCoords: ret.segmentMidPointHoveredCoords,
+            pointerDownState: ret.pointerDownState,
+          },
         });
         return;
       }
@@ -8261,32 +8241,24 @@ class App extends React.Component<AppProps, AppState> {
             return;
           }
 
-          // Since we are reading from previous state which is not possible with
-          // automatic batching in React 18 hence using flush sync to synchronously
-          // update the state. Check https://github.com/excalidraw/excalidraw/pull/5508 for more details.
-
-          flushSync(() => {
-            if (this.pendingState.selectedLinearElement) {
-              this.setState({
-                selectedLinearElement: {
-                  ...this.pendingState.selectedLinearElement,
-                  pointerDownState: ret.pointerDownState,
-                  selectedPointsIndices: ret.selectedPointsIndices,
-                  segmentMidPointHoveredCoords: null,
-                },
-              });
-            }
-            if (this.pendingState.editingLinearElement) {
-              this.setState({
-                editingLinearElement: {
-                  ...this.pendingState.editingLinearElement,
-                  pointerDownState: ret.pointerDownState,
-                  selectedPointsIndices: ret.selectedPointsIndices,
-                  segmentMidPointHoveredCoords: null,
-                },
-              });
-            }
+          this.setState({
+            selectedLinearElement: {
+              ...this.pendingState.selectedLinearElement,
+              pointerDownState: ret.pointerDownState,
+              selectedPointsIndices: ret.selectedPointsIndices,
+              segmentMidPointHoveredCoords: null,
+            },
           });
+          if (this.pendingState.editingLinearElement) {
+            this.setState({
+              editingLinearElement: {
+                ...this.pendingState.editingLinearElement,
+                pointerDownState: ret.pointerDownState,
+                selectedPointsIndices: ret.selectedPointsIndices,
+                segmentMidPointHoveredCoords: null,
+              },
+            });
+          }
 
           return;
         } else if (
@@ -8345,9 +8317,7 @@ class App extends React.Component<AppProps, AppState> {
           topLayerFrame && !selectedElementsHasAFrame ? topLayerFrame : null;
         // Only update the state if there is a difference
         if (this.pendingState.frameToHighlight !== frameToHighlight) {
-          flushSync(() => {
-            this.setState({ frameToHighlight });
-          });
+          this.setState({ frameToHighlight });
         }
 
         // Marking that click was used for dragging to check
@@ -8615,57 +8585,53 @@ class App extends React.Component<AppProps, AppState> {
               arrayToMap(duplicatedElements),
             );
 
-            // we need to update synchronously so as to keep pointerDownState,
-            // appState, and scene elements in sync
-            flushSync(() => {
-              // swap hit element with the duplicated one
-              if (pointerDownState.hit.element) {
-                const cloneId = origIdToDuplicateId.get(
-                  pointerDownState.hit.element.id,
-                );
-                const clonedElement =
-                  cloneId && duplicateElementsMap.get(cloneId);
-                pointerDownState.hit.element = clonedElement || null;
-              }
-              // swap hit elements with the duplicated ones
-              pointerDownState.hit.allHitElements =
-                pointerDownState.hit.allHitElements.reduce(
-                  (
-                    acc: typeof pointerDownState.hit.allHitElements,
-                    origHitElement,
-                  ) => {
-                    const cloneId = origIdToDuplicateId.get(origHitElement.id);
-                    const clonedElement =
-                      cloneId && duplicateElementsMap.get(cloneId);
-                    if (clonedElement) {
-                      acc.push(clonedElement);
-                    }
+            // swap hit element with the duplicated one
+            if (pointerDownState.hit.element) {
+              const cloneId = origIdToDuplicateId.get(
+                pointerDownState.hit.element.id,
+              );
+              const clonedElement =
+                cloneId && duplicateElementsMap.get(cloneId);
+              pointerDownState.hit.element = clonedElement || null;
+            }
+            // swap hit elements with the duplicated ones
+            pointerDownState.hit.allHitElements =
+              pointerDownState.hit.allHitElements.reduce(
+                (
+                  acc: typeof pointerDownState.hit.allHitElements,
+                  origHitElement,
+                ) => {
+                  const cloneId = origIdToDuplicateId.get(origHitElement.id);
+                  const clonedElement =
+                    cloneId && duplicateElementsMap.get(cloneId);
+                  if (clonedElement) {
+                    acc.push(clonedElement);
+                  }
 
-                    return acc;
-                  },
-                  [],
-                );
-
-              // update drag origin to the position at which we started
-              // the duplication so that the drag offset is correct
-              pointerDownState.drag.origin = viewportCoordsToSceneCoords(
-                event,
-                this.pendingState,
+                  return acc;
+                },
+                [],
               );
 
-              // switch selected elements to the duplicated ones
-              this.setState({
-                ...getSelectionStateForElements(
-                  duplicatedElements,
-                  this.scene.getNonDeletedElements(),
-                  this.pendingState,
-                ),
-              });
+            // update drag origin to the position at which we started
+            // the duplication so that the drag offset is correct
+            pointerDownState.drag.origin = viewportCoordsToSceneCoords(
+              event,
+              this.pendingState,
+            );
 
-              this.scene.replaceAllElements(elementsWithIndices);
-              this.maybeCacheVisibleGaps(event, selectedElements, true);
-              this.maybeCacheReferenceSnapPoints(event, selectedElements, true);
+            // switch selected elements to the duplicated ones
+            this.setState({
+              ...getSelectionStateForElements(
+                duplicatedElements,
+                this.scene.getNonDeletedElements(),
+                this.pendingState,
+              ),
             });
+
+            this.scene.replaceAllElements(elementsWithIndices);
+            this.maybeCacheVisibleGaps(event, selectedElements, true);
+            this.maybeCacheReferenceSnapPoints(event, selectedElements, true);
           }
 
           return;
@@ -8676,19 +8642,17 @@ class App extends React.Component<AppProps, AppState> {
         pointerDownState.lastCoords.x = pointerCoords.x;
         pointerDownState.lastCoords.y = pointerCoords.y;
         if (event.altKey) {
-          flushSync(() => {
-            this.setActiveTool(
-              { type: "lasso", fromSelection: true },
-              event.shiftKey,
-            );
-            this.lassoTrail.startPath(
-              pointerDownState.origin.x,
-              pointerDownState.origin.y,
-              event.shiftKey,
-            );
-            this.setAppState({
-              selectionElement: null,
-            });
+          this.setActiveTool(
+            { type: "lasso", fromSelection: true },
+            event.shiftKey,
+          );
+          this.lassoTrail.startPath(
+            pointerDownState.origin.x,
+            pointerDownState.origin.y,
+            event.shiftKey,
+          );
+          this.setAppState({
+            selectionElement: null,
           });
         } else {
           this.maybeDragNewGenericElement(pointerDownState, event);

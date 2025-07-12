@@ -82,7 +82,10 @@ export class LaserTrails implements Trail {
       return;
     }
 
-    for (const [key, collaborator] of this.app.pendingState.collaborators.entries()) {
+    for (const [
+      key,
+      collaborator,
+    ] of this.app.pendingState.collaborators.entries()) {
       let trail!: AnimatedTrail;
 
       if (!this.collabTrails.has(key)) {

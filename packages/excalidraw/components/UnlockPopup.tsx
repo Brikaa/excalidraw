@@ -5,8 +5,6 @@ import {
 } from "@excalidraw/element";
 import { sceneCoordsToViewportCoords } from "@excalidraw/common";
 
-import { flushSync } from "react-dom";
-
 import { actionToggleElementLock } from "../actions";
 import { t } from "../i18n";
 
@@ -45,23 +43,26 @@ const UnlockPopup = ({
     <div
       className="UnlockPopup"
       style={{
-        bottom: `${app.pendingState.height + 12 - viewY + app.pendingState.offsetTop}px`,
+        bottom: `${
+          app.pendingState.height + 12 - viewY + app.pendingState.offsetTop
+        }px`,
         left: `${viewX - app.pendingState.offsetLeft}px`,
       }}
       onClick={() => {
-        flushSync(() => {
-          const groupIds = selectGroupsFromGivenElements(elements, app.pendingState);
-          app.setState({
-            selectedElementIds: elements.reduce(
-              (acc, element) => ({
-                ...acc,
-                [element.id]: true,
-              }),
-              {},
-            ),
-            selectedGroupIds: groupIds,
-            activeLockedId: null,
-          });
+        const groupIds = selectGroupsFromGivenElements(
+          elements,
+          app.pendingState,
+        );
+        app.setState({
+          selectedElementIds: elements.reduce(
+            (acc, element) => ({
+              ...acc,
+              [element.id]: true,
+            }),
+            {},
+          ),
+          selectedGroupIds: groupIds,
+          activeLockedId: null,
         });
         app.actionManager.executeAction(actionToggleElementLock);
       }}

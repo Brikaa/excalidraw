@@ -144,7 +144,10 @@ export class AnimatedTrail implements Trail {
     }
 
     if (this.currentTrail) {
-      const currentPath = this.drawTrail(this.currentTrail, this.app.pendingState);
+      const currentPath = this.drawTrail(
+        this.currentTrail,
+        this.app.pendingState,
+      );
 
       paths.push(currentPath);
     }

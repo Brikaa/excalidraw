@@ -1076,7 +1076,9 @@ class App extends React.Component<AppProps, AppState> {
                         width: 100%;
                         height: 100%;
                         color: ${
-                          this.pendingState.theme === THEME.DARK ? "white" : "black"
+                          this.pendingState.theme === THEME.DARK
+                            ? "white"
+                            : "black"
                         };
                       }
                       body {
@@ -1352,7 +1354,10 @@ class App extends React.Component<AppProps, AppState> {
   };
 
   private renderFrameNames = () => {
-    if (!this.pendingState.frameRendering.enabled || !this.pendingState.frameRendering.name) {
+    if (
+      !this.pendingState.frameRendering.enabled ||
+      !this.pendingState.frameRendering.name
+    ) {
       if (this.pendingState.editingFrame) {
         this.resetEditingFrame(null);
       }
@@ -1486,7 +1491,8 @@ class App extends React.Component<AppProps, AppState> {
               focusedSearchMatch?.id === f.id && focusedSearchMatch?.focus
                 ? "none"
                 : `${f.width * this.pendingState.zoom.value}px`,
-            overflow: f.id === this.pendingState.editingFrame ? "visible" : "hidden",
+            overflow:
+              f.id === this.pendingState.editingFrame ? "visible" : "hidden",
             whiteSpace: "nowrap",
             textOverflow: "ellipsis",
             cursor: CURSOR_TYPE.MOVE,
@@ -2134,7 +2140,9 @@ class App extends React.Component<AppProps, AppState> {
         const shouldUpdateStrokeColor =
           (type === "background" && event.altKey) ||
           (type === "stroke" && !event.altKey);
-        const selectedElements = this.scene.getSelectedElements(this.pendingState);
+        const selectedElements = this.scene.getSelectedElements(
+          this.pendingState,
+        );
         if (
           !selectedElements.length ||
           this.pendingState.activeTool.type !== "selection"
@@ -2146,7 +2154,10 @@ class App extends React.Component<AppProps, AppState> {
             });
           } else {
             this.syncActionResult({
-              appState: { ...this.pendingState, currentItemBackgroundColor: color },
+              appState: {
+                ...this.pendingState,
+                currentItemBackgroundColor: color,
+              },
               captureUpdate: CaptureUpdateAction.IMMEDIATELY,
             });
           }
@@ -2197,7 +2208,11 @@ class App extends React.Component<AppProps, AppState> {
       this.addNewImagesToImageCache();
     }
 
-    if (actionResult.appState || editingTextElement || this.pendingState.contextMenu) {
+    if (
+      actionResult.appState ||
+      editingTextElement ||
+      this.pendingState.contextMenu
+    ) {
       let viewModeEnabled = actionResult?.appState?.viewModeEnabled || false;
       let zenModeEnabled = actionResult?.appState?.zenModeEnabled || false;
       const theme =
@@ -2869,7 +2884,9 @@ class App extends React.Component<AppProps, AppState> {
 
     if (
       this.pendingState.editingLinearElement &&
-      !this.pendingState.selectedElementIds[this.pendingState.editingLinearElement.elementId]
+      !this.pendingState.selectedElementIds[
+        this.pendingState.editingLinearElement.elementId
+      ]
     ) {
       // defer so that the scheduleCapture flag isn't reset via current update
       setTimeout(() => {
@@ -2889,7 +2906,9 @@ class App extends React.Component<AppProps, AppState> {
 
     if (
       this.pendingState.selectedLinearElement &&
-      !this.pendingState.selectedElementIds[this.pendingState.selectedLinearElement.elementId]
+      !this.pendingState.selectedElementIds[
+        this.pendingState.selectedLinearElement.elementId
+      ]
     ) {
       // To make sure `selectedLinearElement` is in sync with `selectedElementIds`, however this shouldn't be needed once
       // we have a single API to update `selectedElementIds`
@@ -4299,8 +4318,9 @@ class App extends React.Component<AppProps, AppState> {
 
       if (event.key === KEYS.PAGE_UP || event.key === KEYS.PAGE_DOWN) {
         let offset =
-          (event.shiftKey ? this.pendingState.width : this.pendingState.height) /
-          this.pendingState.zoom.value;
+          (event.shiftKey
+            ? this.pendingState.width
+            : this.pendingState.height) / this.pendingState.zoom.value;
         if (event.key === KEYS.PAGE_DOWN) {
           offset = -offset;
         }
@@ -4416,14 +4436,17 @@ class App extends React.Component<AppProps, AppState> {
 
         event.preventDefault();
       } else if (event.key === KEYS.ENTER) {
-        const selectedElements = this.scene.getSelectedElements(this.pendingState);
+        const selectedElements = this.scene.getSelectedElements(
+          this.pendingState,
+        );
         if (selectedElements.length === 1) {
           const selectedElement = selectedElements[0];
           if (event[KEYS.CTRL_OR_CMD] || isLineElement(selectedElement)) {
             if (isLinearElement(selectedElement)) {
               if (
                 !this.pendingState.editingLinearElement ||
-                this.pendingState.editingLinearElement.elementId !== selectedElement.id
+                this.pendingState.editingLinearElement.elementId !==
+                  selectedElement.id
               ) {
                 this.store.scheduleCapture();
                 if (!isElbowArrow(selectedElement)) {
@@ -4483,7 +4506,10 @@ class App extends React.Component<AppProps, AppState> {
               })`,
             );
           }
-          if (shape === "arrow" && this.pendingState.activeTool.type === "arrow") {
+          if (
+            shape === "arrow" &&
+            this.pendingState.activeTool.type === "arrow"
+          ) {
             this.setState({
               currentItemArrowType:
                 this.pendingState.currentItemArrowType === ARROW_TYPE.sharp
@@ -4511,7 +4537,9 @@ class App extends React.Component<AppProps, AppState> {
         !event.altKey &&
         !event[KEYS.CTRL_OR_CMD]
       ) {
-        const selectedElements = this.scene.getSelectedElements(this.pendingState);
+        const selectedElements = this.scene.getSelectedElements(
+          this.pendingState,
+        );
         if (
           this.pendingState.activeTool.type === "selection" &&
           !selectedElements.length
@@ -4538,7 +4566,9 @@ class App extends React.Component<AppProps, AppState> {
         event.shiftKey &&
         event.key.toLowerCase() === KEYS.F
       ) {
-        const selectedElements = this.scene.getSelectedElements(this.pendingState);
+        const selectedElements = this.scene.getSelectedElements(
+          this.pendingState,
+        );
 
         if (
           this.pendingState.activeTool.type === "selection" &&
@@ -4623,7 +4653,9 @@ class App extends React.Component<AppProps, AppState> {
     }
     if (isArrowKey(event.key)) {
       bindOrUnbindLinearElements(
-        this.scene.getSelectedElements(this.pendingState).filter(isLinearElement),
+        this.scene
+          .getSelectedElements(this.pendingState)
+          .filter(isLinearElement),
         isBindingEnabled(this.pendingState),
         this.pendingState.selectedLinearElement?.selectedPointsIndices ?? [],
         this.scene,
@@ -5282,7 +5314,8 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     const fontFamily =
-      existingTextElement?.fontFamily || this.pendingState.currentItemFontFamily;
+      existingTextElement?.fontFamily ||
+      this.pendingState.currentItemFontFamily;
 
     const lineHeight =
       existingTextElement?.lineHeight || getLineHeight(fontFamily);
@@ -5431,7 +5464,8 @@ class App extends React.Component<AppProps, AppState> {
       if (
         ((event[KEYS.CTRL_OR_CMD] && isSimpleArrow(selectedLinearElement)) ||
           isLineElement(selectedLinearElement)) &&
-        this.pendingState.editingLinearElement?.elementId !== selectedLinearElement.id
+        this.pendingState.editingLinearElement?.elementId !==
+          selectedLinearElement.id
       ) {
         this.store.scheduleCapture();
         this.setState({
@@ -5527,7 +5561,10 @@ class App extends React.Component<AppProps, AppState> {
 
       const selectedGroupId =
         hitElement &&
-        getSelectedGroupIdForElement(hitElement, this.pendingState.selectedGroupIds);
+        getSelectedGroupIdForElement(
+          hitElement,
+          this.pendingState.selectedGroupIds,
+        );
 
       if (selectedGroupId) {
         this.store.scheduleCapture();
@@ -5719,7 +5756,11 @@ class App extends React.Component<AppProps, AppState> {
   private handleCanvasPointerMove = (
     event: React.PointerEvent<HTMLCanvasElement>,
   ) => {
-    this.savePointer(event.clientX, event.clientY, this.pendingState.cursorButton);
+    this.savePointer(
+      event.clientX,
+      event.clientY,
+      this.pendingState.cursorButton,
+    );
     this.lastPointerMoveEvent = event.nativeEvent;
 
     if (gesture.pointers.has(event.pointerId)) {
@@ -5743,7 +5784,8 @@ class App extends React.Component<AppProps, AppState> {
 
       const distance = getDistance(Array.from(gesture.pointers.values()));
       const scaleFactor =
-        this.pendingState.activeTool.type === "freedraw" && this.pendingState.penMode
+        this.pendingState.activeTool.type === "freedraw" &&
+        this.pendingState.penMode
           ? 1
           : distance / gesture.initialDistance;
 
@@ -6198,7 +6240,10 @@ class App extends React.Component<AppProps, AppState> {
       }
     }
 
-    if (this.pendingState.openDialog?.name === "elementLinkSelector" && hitElement) {
+    if (
+      this.pendingState.openDialog?.name === "elementLinkSelector" &&
+      hitElement
+    ) {
       this.setState({
         hoveredElementIds: updateStable(
           this.pendingState.hoveredElementIds,
@@ -6311,7 +6356,8 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       if (
-        this.pendingState.selectedLinearElement.hoverPointIndex !== hoverPointIndex
+        this.pendingState.selectedLinearElement.hoverPointIndex !==
+        hoverPointIndex
       ) {
         this.setState({
           selectedLinearElement: {
@@ -6641,7 +6687,10 @@ class App extends React.Component<AppProps, AppState> {
       onPointerUp(_event || event.nativeEvent),
     );
 
-    if (!this.pendingState.viewModeEnabled || this.pendingState.activeTool.type === "laser") {
+    if (
+      !this.pendingState.viewModeEnabled ||
+      this.pendingState.activeTool.type === "laser"
+    ) {
       window.addEventListener(EVENT.POINTER_MOVE, onPointerMove);
       window.addEventListener(EVENT.POINTER_UP, onPointerUp);
       window.addEventListener(EVENT.KEYDOWN, onKeyDown);
@@ -6845,8 +6894,10 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       this.translateCanvas({
-        scrollX: this.pendingState.scrollX - deltaX / this.pendingState.zoom.value,
-        scrollY: this.pendingState.scrollY - deltaY / this.pendingState.zoom.value,
+        scrollX:
+          this.pendingState.scrollX - deltaX / this.pendingState.zoom.value,
+        scrollY:
+          this.pendingState.scrollY - deltaY / this.pendingState.zoom.value,
       });
     });
     const teardown = withBatchedUpdates(
@@ -6969,7 +7020,10 @@ class App extends React.Component<AppProps, AppState> {
     pointerDownState: PointerDownState,
   ): boolean {
     if (
-      !(pointerDownState.scrollbars.isOverEither && !this.pendingState.multiElement)
+      !(
+        pointerDownState.scrollbars.isOverEither &&
+        !this.pendingState.multiElement
+      )
     ) {
       return false;
     }
@@ -7028,7 +7082,9 @@ class App extends React.Component<AppProps, AppState> {
     if (this.pendingState.activeTool.type === "selection") {
       const elements = this.scene.getNonDeletedElements();
       const elementsMap = this.scene.getNonDeletedElementsMap();
-      const selectedElements = this.scene.getSelectedElements(this.pendingState);
+      const selectedElements = this.scene.getSelectedElements(
+        this.pendingState,
+      );
 
       if (
         selectedElements.length === 1 &&
@@ -7104,7 +7160,8 @@ class App extends React.Component<AppProps, AppState> {
       } else {
         if (this.pendingState.selectedLinearElement) {
           const linearElementEditor =
-            this.pendingState.editingLinearElement || this.pendingState.selectedLinearElement;
+            this.pendingState.editingLinearElement ||
+            this.pendingState.selectedLinearElement;
           const ret = LinearElementEditor.handlePointerDown(
             event,
             this,
@@ -7186,7 +7243,8 @@ class App extends React.Component<AppProps, AppState> {
 
         if (
           this.pendingState.croppingElementId &&
-          pointerDownState.hit.element?.id !== this.pendingState.croppingElementId
+          pointerDownState.hit.element?.id !==
+            this.pendingState.croppingElementId
         ) {
           this.finishImageCropping();
         }
@@ -7262,7 +7320,10 @@ class App extends React.Component<AppProps, AppState> {
               !isElementInGroup(hitElement, this.pendingState.editingGroupId)
             ) {
               this.setState({
-                selectedElementIds: makeNextSelectedElementIds({}, this.pendingState),
+                selectedElementIds: makeNextSelectedElementIds(
+                  {},
+                  this.pendingState,
+                ),
                 selectedGroupIds: {},
                 editingGroupId: null,
                 activeEmbeddable: null,
@@ -7399,7 +7460,9 @@ class App extends React.Component<AppProps, AppState> {
   };
 
   private isASelectedElement(hitElement: ExcalidrawElement | null): boolean {
-    return hitElement != null && this.pendingState.selectedElementIds[hitElement.id];
+    return (
+      hitElement != null && this.pendingState.selectedElementIds[hitElement.id]
+    );
   }
 
   private isHittingCommonBoundingBoxOfSelectedElements(
@@ -7761,7 +7824,8 @@ class App extends React.Component<AppProps, AppState> {
       an arrow, we want it to be null for both. Otherwise, we want it to use the
       values from appState. */
 
-      const { currentItemStartArrowhead, currentItemEndArrowhead } = this.pendingState;
+      const { currentItemStartArrowhead, currentItemEndArrowhead } =
+        this.pendingState;
       const [startArrowhead, endArrowhead] =
         elementType === "arrow"
           ? [currentItemStartArrowhead, currentItemEndArrowhead]
@@ -7790,7 +7854,8 @@ class App extends React.Component<AppProps, AppState> {
               endArrowhead,
               locked: false,
               frameId: topLayerFrame ? topLayerFrame.id : null,
-              elbowed: this.pendingState.currentItemArrowType === ARROW_TYPE.elbow,
+              elbowed:
+                this.pendingState.currentItemArrowType === ARROW_TYPE.elbow,
               fixedSegments:
                 this.pendingState.currentItemArrowType === ARROW_TYPE.elbow
                   ? []
@@ -8033,7 +8098,10 @@ class App extends React.Component<AppProps, AppState> {
       if (this.pendingState.openDialog?.name === "elementLinkSelector") {
         return;
       }
-      const pointerCoords = viewportCoordsToSceneCoords(event, this.pendingState);
+      const pointerCoords = viewportCoordsToSceneCoords(
+        event,
+        this.pendingState,
+      );
 
       if (this.pendingState.activeLockedId) {
         this.setState({
@@ -8044,7 +8112,8 @@ class App extends React.Component<AppProps, AppState> {
       if (
         this.pendingState.selectedLinearElement &&
         this.pendingState.selectedLinearElement.elbowed &&
-        this.pendingState.selectedLinearElement.pointerDownState.segmentMidpoint.index
+        this.pendingState.selectedLinearElement.pointerDownState.segmentMidpoint
+          .index
       ) {
         const [gridX, gridY] = getGridPoint(
           pointerCoords.x,
@@ -8053,8 +8122,8 @@ class App extends React.Component<AppProps, AppState> {
         );
 
         let index =
-          this.pendingState.selectedLinearElement.pointerDownState.segmentMidpoint
-            .index;
+          this.pendingState.selectedLinearElement.pointerDownState
+            .segmentMidpoint.index;
         if (index < 0) {
           const nextCoords = LinearElementEditor.getSegmentMidpointHitCoords(
             {
@@ -8170,7 +8239,8 @@ class App extends React.Component<AppProps, AppState> {
 
       if (this.pendingState.selectedLinearElement) {
         const linearElementEditor =
-          this.pendingState.editingLinearElement || this.pendingState.selectedLinearElement;
+          this.pendingState.editingLinearElement ||
+          this.pendingState.selectedLinearElement;
 
         if (
           LinearElementEditor.shouldAddMidpoint(
@@ -8259,7 +8329,9 @@ class App extends React.Component<AppProps, AppState> {
         !isSelectingPointsInLineEditor &&
         this.pendingState.activeTool.type !== "lasso"
       ) {
-        const selectedElements = this.scene.getSelectedElements(this.pendingState);
+        const selectedElements = this.scene.getSelectedElements(
+          this.pendingState,
+        );
 
         if (selectedElements.every((element) => element.locked)) {
           return;
@@ -8751,7 +8823,10 @@ class App extends React.Component<AppProps, AppState> {
         } else {
           let shouldReuseSelection = true;
 
-          if (!event.shiftKey && isSomeElementSelected(elements, this.pendingState)) {
+          if (
+            !event.shiftKey &&
+            isSomeElementSelected(elements, this.pendingState)
+          ) {
             if (
               pointerDownState.withCmdOrCtrl &&
               pointerDownState.hit.element
@@ -9025,7 +9100,9 @@ class App extends React.Component<AppProps, AppState> {
           pointerDownState.hit?.element?.id !==
           this.pendingState.selectedLinearElement.elementId
         ) {
-          const selectedELements = this.scene.getSelectedElements(this.pendingState);
+          const selectedELements = this.scene.getSelectedElements(
+            this.pendingState,
+          );
           // set selectedLinearElement to null if there is more than one element selected since we don't want to show linear element handles
           if (selectedELements.length > 1) {
             this.setState({ selectedLinearElement: null });
@@ -9237,7 +9314,10 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       if (pointerDownState.drag.hasOccurred) {
-        const sceneCoords = viewportCoordsToSceneCoords(childEvent, this.pendingState);
+        const sceneCoords = viewportCoordsToSceneCoords(
+          childEvent,
+          this.pendingState,
+        );
 
         // when editing the points of a linear element, we check if the
         // linear element still is in the frame afterwards
@@ -9280,7 +9360,9 @@ class App extends React.Component<AppProps, AppState> {
           // update the relationships between selected elements and frames
           const topLayerFrame = this.getTopLayerFrameAtSceneCoords(sceneCoords);
 
-          const selectedElements = this.scene.getSelectedElements(this.pendingState);
+          const selectedElements = this.scene.getSelectedElements(
+            this.pendingState,
+          );
           let nextElements = this.scene.getElementsMapIncludingDeleted();
 
           const updateGroupIdsAfterEditingGroup = (
@@ -9419,7 +9501,9 @@ class App extends React.Component<AppProps, AppState> {
         this.pendingState.selectedLinearElement?.elementId !== hitElement?.id &&
         isLinearElement(hitElement)
       ) {
-        const selectedElements = this.scene.getSelectedElements(this.pendingState);
+        const selectedElements = this.scene.getSelectedElements(
+          this.pendingState,
+        );
         // set selectedLinearElement when no other element selected except
         // the one we've hit
         if (selectedElements.length === 1) {
@@ -9670,7 +9754,10 @@ class App extends React.Component<AppProps, AppState> {
         } else {
           // Deselect selected elements
           this.setState({
-            selectedElementIds: makeNextSelectedElementIds({}, this.pendingState),
+            selectedElementIds: makeNextSelectedElementIds(
+              {},
+              this.pendingState,
+            ),
             selectedGroupIds: {},
             editingGroupId: null,
             activeEmbeddable: null,
@@ -9699,7 +9786,10 @@ class App extends React.Component<AppProps, AppState> {
 
       if (
         activeTool.type !== "selection" ||
-        isSomeElementSelected(this.scene.getNonDeletedElements(), this.pendingState) ||
+        isSomeElementSelected(
+          this.scene.getNonDeletedElements(),
+          this.pendingState,
+        ) ||
         !isShallowEqual(
           this.pendingState.previousSelectedElementIds,
           this.pendingState.selectedElementIds,
@@ -9746,7 +9836,9 @@ class App extends React.Component<AppProps, AppState> {
         this.setState({
           newElement: null,
           suggestedBindings: [],
-          activeTool: updateActiveTool(this.pendingState, { type: "selection" }),
+          activeTool: updateActiveTool(this.pendingState, {
+            type: "selection",
+          }),
         });
       } else {
         this.setState({
@@ -10005,8 +10097,10 @@ class App extends React.Component<AppProps, AppState> {
 
   private onImageAction = async () => {
     try {
-      const clientX = this.pendingState.width / 2 + this.pendingState.offsetLeft;
-      const clientY = this.pendingState.height / 2 + this.pendingState.offsetTop;
+      const clientX =
+        this.pendingState.width / 2 + this.pendingState.offsetLeft;
+      const clientY =
+        this.pendingState.height / 2 + this.pendingState.offsetTop;
 
       const { x, y } = viewportCoordsToSceneCoords(
         { clientX, clientY },
@@ -10040,7 +10134,9 @@ class App extends React.Component<AppProps, AppState> {
       this.setState(
         {
           newElement: null,
-          activeTool: updateActiveTool(this.pendingState, { type: "selection" }),
+          activeTool: updateActiveTool(this.pendingState, {
+            type: "selection",
+          }),
         },
         () => {
           this.actionManager.executeAction(actionFinalize);

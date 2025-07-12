@@ -153,7 +153,7 @@ const LINEAR_ELEMENT_CONVERSION_CACHE = new Map<
 >();
 
 const ConvertElementTypePopup = ({ app }: { app: App }) => {
-  const selectedElements = app.scene.getSelectedElements(app.state);
+  const selectedElements = app.scene.getSelectedElements(app.pendingState);
   const elementsCategoryRef = useRef<ConversionType>(null);
 
   // close shape switch panel if selecting different "types" of elements
@@ -229,9 +229,9 @@ const Panel = ({
       a.id.localeCompare(b.id),
     );
     const newPositionRef = `
-      ${app.state.scrollX}${app.state.scrollY}${app.state.offsetTop}${
-      app.state.offsetLeft
-    }${app.state.zoom.value}${elements.map((el) => el.id).join(",")}`;
+      ${app.pendingState.scrollX}${app.pendingState.scrollY}${app.pendingState.offsetTop}${
+      app.pendingState.offsetLeft
+    }${app.pendingState.zoom.value}${elements.map((el) => el.id).join(",")}`;
 
     if (newPositionRef === positionRef.current) {
       return;
@@ -258,11 +258,11 @@ const Panel = ({
 
     const { x, y } = sceneCoordsToViewportCoords(
       { sceneX: bottomLeft[0], sceneY: bottomLeft[1] },
-      app.state,
+      app.pendingState,
     );
 
     setPanelPosition({ x, y });
-  }, [genericElements, linearElements, app.scene, app.state]);
+  }, [genericElements, linearElements, app.scene, app.pendingState]);
 
   useEffect(() => {
     for (const linearElement of linearElements) {
@@ -316,10 +316,10 @@ const Panel = ({
         position: "absolute",
         top: `${
           panelPosition.y +
-          (GAP_VERTICAL + 8) * app.state.zoom.value -
-          app.state.offsetTop
+          (GAP_VERTICAL + 8) * app.pendingState.zoom.value -
+          app.pendingState.offsetTop
         }px`,
-        left: `${panelPosition.x - app.state.offsetLeft - GAP_HORIZONTAL}px`,
+        left: `${panelPosition.x - app.pendingState.offsetLeft - GAP_HORIZONTAL}px`,
         zIndex: 2,
       }}
       className={CLASSES.CONVERT_ELEMENT_TYPE_POPUP}
@@ -344,7 +344,7 @@ const Panel = ({
             aria-label={type}
             data-testid={`toolbar-${type}`}
             onChange={() => {
-              if (app.state.activeTool.type !== type) {
+              if (app.pendingState.activeTool.type !== type) {
                 trackEvent("convertElementType", type, "ui");
               }
               convertElementTypes(app, {
@@ -426,7 +426,7 @@ export const convertElementTypes = (
     return false;
   }
 
-  const selectedElements = app.scene.getSelectedElements(app.state);
+  const selectedElements = app.scene.getSelectedElements(app.pendingState);
 
   const selectedElementIds = selectedElements.reduce(
     (acc, element) => ({ ...acc, [element.id]: true }),
@@ -608,7 +608,7 @@ export const convertElementTypes = (
     }
 
     const convertedSelectedLinearElements = filterLinearConvertibleElements(
-      app.scene.getSelectedElements(app.state),
+      app.scene.getSelectedElements(app.pendingState),
     );
 
     app.setState((prevState) => ({

@@ -46,7 +46,7 @@ export class EraserTrail extends AnimatedTrail {
         return Math.min(easeOut(l), easeOut(t));
       },
       fill: () =>
-        app.state.theme === THEME.LIGHT
+        app.pendingState.theme === THEME.LIGHT
           ? "rgba(0, 0, 0, 0.2)"
           : "rgba(255, 255, 255, 0.2)",
     });

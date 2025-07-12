@@ -78,11 +78,11 @@ export class LaserTrails implements Trail {
   }
 
   private updateCollabTrails() {
-    if (!this.container || this.app.state.collaborators.size === 0) {
+    if (!this.container || this.app.pendingState.collaborators.size === 0) {
       return;
     }
 
-    for (const [key, collaborator] of this.app.state.collaborators.entries()) {
+    for (const [key, collaborator] of this.app.pendingState.collaborators.entries()) {
       let trail!: AnimatedTrail;
 
       if (!this.collabTrails.has(key)) {
@@ -120,7 +120,7 @@ export class LaserTrails implements Trail {
     }
 
     for (const key of this.collabTrails.keys()) {
-      if (!this.app.state.collaborators.has(key)) {
+      if (!this.app.pendingState.collaborators.has(key)) {
         const trail = this.collabTrails.get(key)!;
         trail.stop();
         this.collabTrails.delete(key);

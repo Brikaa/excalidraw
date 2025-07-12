@@ -130,7 +130,7 @@ export const textWysiwyg = ({
   };
 
   const updateWysiwygStyle = () => {
-    const appState = app.state;
+    const appState = app.pendingState;
     const updatedTextElement = app.scene.getElement<ExcalidrawTextElement>(id);
 
     if (!updatedTextElement) {
@@ -345,8 +345,8 @@ export const textWysiwyg = ({
       );
 
       const font = getFontString({
-        fontSize: app.state.currentItemFontSize,
-        fontFamily: app.state.currentItemFontFamily,
+        fontSize: app.pendingState.currentItemFontSize,
+        fontFamily: app.pendingState.currentItemFontFamily,
       });
       if (container) {
         const boundTextElement = getBoundTextElement(

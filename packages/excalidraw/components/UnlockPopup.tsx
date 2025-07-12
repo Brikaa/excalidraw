@@ -38,19 +38,19 @@ const UnlockPopup = ({
   const [x, y] = getCommonBounds(elements);
   const { x: viewX, y: viewY } = sceneCoordsToViewportCoords(
     { sceneX: x, sceneY: y },
-    app.state,
+    app.pendingState,
   );
 
   return (
     <div
       className="UnlockPopup"
       style={{
-        bottom: `${app.state.height + 12 - viewY + app.state.offsetTop}px`,
-        left: `${viewX - app.state.offsetLeft}px`,
+        bottom: `${app.pendingState.height + 12 - viewY + app.pendingState.offsetTop}px`,
+        left: `${viewX - app.pendingState.offsetLeft}px`,
       }}
       onClick={() => {
         flushSync(() => {
-          const groupIds = selectGroupsFromGivenElements(elements, app.state);
+          const groupIds = selectGroupsFromGivenElements(elements, app.pendingState);
           app.setState({
             selectedElementIds: elements.reduce(
               (acc, element) => ({

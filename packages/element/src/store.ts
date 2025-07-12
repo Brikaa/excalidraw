@@ -143,7 +143,7 @@ export class Store {
       // as comparing against the snapshot might include yet uncomitted changes (i.e. async freedraw / text / image, etc.)
       const currentSnapshot = StoreSnapshot.create(
         this.app.scene.getElementsMapIncludingDeleted(),
-        this.app.state,
+        this.app.pendingState,
       );
 
       const scheduledSnapshot = currentSnapshot.maybeClone(

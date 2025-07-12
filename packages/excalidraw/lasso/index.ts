@@ -177,9 +177,9 @@ export class LassoTrail extends AnimatedTrail {
       ?.originalPoints?.map((p) => pointFrom<GlobalPoint>(p[0], p[1]));
 
     const currentCanvasTranslate: CanvasTranslate = {
-      scrollX: this.app.state.scrollX,
-      scrollY: this.app.state.scrollY,
-      zoom: this.app.state.zoom.value,
+      scrollX: this.app.pendingState.scrollX,
+      scrollY: this.app.pendingState.scrollY,
+      zoom: this.app.pendingState.zoom.value,
     };
 
     if (
@@ -203,7 +203,7 @@ export class LassoTrail extends AnimatedTrail {
         elementsSegments: this.elementsSegments,
         intersectedElements: this.intersectedElements,
         enclosedElements: this.enclosedElements,
-        simplifyDistance: 5 / this.app.state.zoom.value,
+        simplifyDistance: 5 / this.app.pendingState.zoom.value,
       });
 
       this.selectElementsFromIds(selectedElementIds);

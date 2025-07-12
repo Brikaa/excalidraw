@@ -578,6 +578,7 @@ class App extends React.Component<AppProps, AppState> {
     container: HTMLDivElement | null;
     id: string;
   };
+  public pendingState: AppState;
 
   public files: BinaryFiles = {};
   public imageCache: AppClassProperties["imageCache"] = new Map();
@@ -592,6 +593,17 @@ class App extends React.Component<AppProps, AppState> {
   /** embeds that have been inserted to DOM (as a perf optim, we don't want to
    * insert to DOM before user initially scrolls to them) */
   private initializedEmbeds = new Set<ExcalidrawIframeLikeElement["id"]>();
+
+  public setState<K extends keyof AppState>(
+    newState: Pick<AppState, K> | AppState | null,
+    callback?: () => void,
+  ) {
+    this.pendingState = {
+      ...this.pendingState,
+      ...newState,
+    };
+    super.setState(newState, callback);
+  }
 
   private handleToastClose = () => {
     this.setToast(null);
@@ -661,8 +673,8 @@ class App extends React.Component<AppProps, AppState> {
       theme = defaultAppState.theme,
       name = `${t("labels.untitled")}-${getDateTime()}`,
     } = props;
-    this.state = {
-      ...defaultAppState,
+    const createState = () => ({
+      ...getDefaultAppState(),
       theme,
       isLoading: true,
       ...this.getCanvasOffsets(),
@@ -673,7 +685,9 @@ class App extends React.Component<AppProps, AppState> {
       name,
       width: window.innerWidth,
       height: window.innerHeight,
-    };
+    });
+    this.state = createState();
+    this.pendingState = createState();
 
     this.id = nanoid();
     this.library = new Library(this);
@@ -2219,23 +2233,20 @@ class App extends React.Component<AppProps, AppState> {
         editingTextElement = null;
       }
 
-      this.setState((prevAppState) => {
-        const actionAppState = actionResult.appState || {};
-
-        return {
-          ...prevAppState,
-          ...actionAppState,
-          // NOTE this will prevent opening context menu using an action
-          // or programmatically from the host, so it will need to be
-          // rewritten later
-          contextMenu: null,
-          editingTextElement,
-          viewModeEnabled,
-          zenModeEnabled,
-          theme,
-          name,
-          errorMessage,
-        };
+      const actionAppState = actionResult.appState || {};
+      this.setState({
+        ...this.pendingState,
+        ...actionAppState,
+        // NOTE this will prevent opening context menu using an action
+        // or programmatically from the host, so it will need to be
+        // rewritten later
+        contextMenu: null,
+        editingTextElement,
+        viewModeEnabled,
+        zenModeEnabled,
+        theme,
+        name,
+        errorMessage,
       });
 
       didUpdate = true;
@@ -2276,11 +2287,13 @@ class App extends React.Component<AppProps, AppState> {
   private resetScene = withBatchedUpdates(
     (opts?: { resetLoadingState: boolean }) => {
       this.scene.replaceAllElements([]);
-      this.setState((state) => ({
+      this.setState({
         ...getDefaultAppState(),
-        isLoading: opts?.resetLoadingState ? false : state.isLoading,
+        isLoading: opts?.resetLoadingState
+          ? false
+          : this.pendingState.isLoading,
         theme: this.state.theme,
-      }));
+      });
       this.resetStore();
       this.resetHistory();
     },
@@ -2917,12 +2930,12 @@ class App extends React.Component<AppProps, AppState> {
 
   private onScroll = debounce(() => {
     const { offsetTop, offsetLeft } = this.getCanvasOffsets();
-    this.setState((state) => {
-      if (state.offsetLeft === offsetLeft && state.offsetTop === offsetTop) {
-        return null;
-      }
-      return { offsetTop, offsetLeft };
-    });
+    if (
+      this.pendingState.offsetLeft !== offsetLeft ||
+      this.pendingState.offsetTop !== offsetTop
+    ) {
+      this.setState({ offsetTop, offsetLeft });
+    }
   }, SCROLL_TIMEOUT);
 
   // Copy/paste
@@ -3542,10 +3555,7 @@ class App extends React.Component<AppProps, AppState> {
     }
   }
 
-  setAppState: React.Component<any, AppState>["setState"] = (
-    state,
-    callback,
-  ) => {
+  setAppState: App["setState"] = (state, callback) => {
     this.setState(state, callback);
   };
 
@@ -3565,19 +3575,17 @@ class App extends React.Component<AppProps, AppState> {
         `${source} (${this.device.editor.isMobile ? "mobile" : "desktop"})`,
       );
     }
-    this.setState((prevState) => {
-      return {
-        activeTool: {
-          ...prevState.activeTool,
-          ...updateActiveTool(
-            this.state,
-            prevState.activeTool.locked
-              ? { type: "selection" }
-              : prevState.activeTool,
-          ),
-          locked: !prevState.activeTool.locked,
-        },
-      };
+    this.setState({
+      activeTool: {
+        ...this.pendingState.activeTool,
+        ...updateActiveTool(
+          this.state,
+          this.pendingState.activeTool.locked
+            ? { type: "selection" }
+            : this.pendingState.activeTool,
+        ),
+        locked: !this.pendingState.activeTool.locked,
+      },
     });
   };
 
@@ -3588,26 +3596,24 @@ class App extends React.Component<AppProps, AppState> {
           prevState: AppState["frameRendering"],
         ) => Partial<AppState["frameRendering"]>),
   ) => {
-    this.setState((prevState) => {
-      const next =
-        typeof opts === "function" ? opts(prevState.frameRendering) : opts;
-      return {
-        frameRendering: {
-          enabled: next?.enabled ?? prevState.frameRendering.enabled,
-          clip: next?.clip ?? prevState.frameRendering.clip,
-          name: next?.name ?? prevState.frameRendering.name,
-          outline: next?.outline ?? prevState.frameRendering.outline,
-        },
-      };
+    const next =
+      typeof opts === "function"
+        ? opts(this.pendingState.frameRendering)
+        : opts;
+    this.setState({
+      frameRendering: {
+        enabled: next?.enabled ?? this.pendingState.frameRendering.enabled,
+        clip: next?.clip ?? this.pendingState.frameRendering.clip,
+        name: next?.name ?? this.pendingState.frameRendering.name,
+        outline: next?.outline ?? this.pendingState.frameRendering.outline,
+      },
     });
   };
 
   togglePenMode = (force: boolean | null) => {
-    this.setState((prevState) => {
-      return {
-        penMode: force ?? !prevState.penMode,
-        penDetected: true,
-      };
+    this.setState({
+      penMode: force ?? !this.pendingState.penMode,
+      penDetected: true,
     });
   };
 
@@ -3788,9 +3794,7 @@ class App extends React.Component<AppProps, AppState> {
   };
 
   /** use when changing scrollX/scrollY/zoom based on user interaction */
-  private translateCanvas: React.Component<any, AppState>["setState"] = (
-    state,
-  ) => {
+  private translateCanvas: App["setState"] = (state) => {
     this.cancelInProgressAnimation?.();
     this.maybeUnfollowRemoteUser();
     this.setState(state);
@@ -4190,14 +4194,14 @@ class App extends React.Component<AppProps, AppState> {
             );
 
             if (nextId) {
-              this.setState((prevState) => ({
+              this.setState({
                 selectedElementIds: makeNextSelectedElementIds(
                   {
                     [nextId]: true,
                   },
-                  prevState,
+                  this.pendingState,
                 ),
-              }));
+              });
 
               const nextNode = this.scene
                 .getNonDeletedElementsMap()
@@ -4301,13 +4305,13 @@ class App extends React.Component<AppProps, AppState> {
           offset = -offset;
         }
         if (event.shiftKey) {
-          this.translateCanvas((state) => ({
-            scrollX: state.scrollX + offset,
-          }));
+          this.translateCanvas({
+            scrollX: this.pendingState.scrollX + offset,
+          });
         } else {
-          this.translateCanvas((state) => ({
-            scrollY: state.scrollY + offset,
-          }));
+          this.translateCanvas({
+            scrollY: this.pendingState.scrollY + offset,
+          });
         }
       }
 
@@ -4480,14 +4484,14 @@ class App extends React.Component<AppProps, AppState> {
             );
           }
           if (shape === "arrow" && this.state.activeTool.type === "arrow") {
-            this.setState((prevState) => ({
+            this.setState({
               currentItemArrowType:
-                prevState.currentItemArrowType === ARROW_TYPE.sharp
+                this.pendingState.currentItemArrowType === ARROW_TYPE.sharp
                   ? ARROW_TYPE.round
-                  : prevState.currentItemArrowType === ARROW_TYPE.round
+                  : this.pendingState.currentItemArrowType === ARROW_TYPE.round
                   ? ARROW_TYPE.elbow
                   : ARROW_TYPE.sharp,
-            }));
+            });
           }
           this.setActiveTool({ type: shape });
           event.stopPropagation();
@@ -4646,14 +4650,14 @@ class App extends React.Component<AppProps, AppState> {
         const firstNode = this.flowChartCreator.pendingNodes?.[0];
 
         if (firstNode) {
-          this.setState((prevState) => ({
+          this.setState({
             selectedElementIds: makeNextSelectedElementIds(
               {
                 [firstNode.id]: true,
               },
-              prevState,
+              this.pendingState,
             ),
-          }));
+          });
 
           if (
             !isElementCompletelyInViewport(
@@ -4730,48 +4734,55 @@ class App extends React.Component<AppProps, AppState> {
       this.onImageAction();
     }
 
-    this.setState((prevState) => {
-      const commonResets = {
-        snapLines: prevState.snapLines.length ? [] : prevState.snapLines,
-        originSnapOffset: null,
-        activeEmbeddable: null,
-      } as const;
+    const commonResets = {
+      snapLines: this.pendingState.snapLines.length
+        ? []
+        : this.pendingState.snapLines,
+      originSnapOffset: null,
+      activeEmbeddable: null,
+    } as const;
 
-      if (nextActiveTool.type === "freedraw") {
-        this.store.scheduleCapture();
-      }
+    if (nextActiveTool.type === "freedraw") {
+      this.store.scheduleCapture();
+    }
 
-      if (nextActiveTool.type === "lasso") {
-        return {
-          ...prevState,
-          activeTool: nextActiveTool,
-          ...(keepSelection
-            ? {}
-            : {
-                selectedElementIds: makeNextSelectedElementIds({}, prevState),
-                selectedGroupIds: makeNextSelectedElementIds({}, prevState),
-                editingGroupId: null,
-                multiElement: null,
-              }),
-          ...commonResets,
-        };
-      } else if (nextActiveTool.type !== "selection") {
-        return {
-          ...prevState,
-          activeTool: nextActiveTool,
-          selectedElementIds: makeNextSelectedElementIds({}, prevState),
-          selectedGroupIds: makeNextSelectedElementIds({}, prevState),
-          editingGroupId: null,
-          multiElement: null,
-          ...commonResets,
-        };
-      }
-      return {
-        ...prevState,
+    if (nextActiveTool.type === "lasso") {
+      this.setState({
+        ...this.pendingState,
+        activeTool: nextActiveTool,
+        ...(keepSelection
+          ? {}
+          : {
+              selectedElementIds: makeNextSelectedElementIds(
+                {},
+                this.pendingState,
+              ),
+              selectedGroupIds: makeNextSelectedElementIds(
+                {},
+                this.pendingState,
+              ),
+              editingGroupId: null,
+              multiElement: null,
+            }),
+        ...commonResets,
+      });
+    } else if (nextActiveTool.type !== "selection") {
+      this.setState({
+        ...this.pendingState,
+        activeTool: nextActiveTool,
+        selectedElementIds: makeNextSelectedElementIds({}, this.pendingState),
+        selectedGroupIds: makeNextSelectedElementIds({}, this.pendingState),
+        editingGroupId: null,
+        multiElement: null,
+        ...commonResets,
+      });
+    } else {
+      this.setState({
+        ...this.pendingState,
         activeTool: nextActiveTool,
         ...commonResets,
-      };
-    });
+      });
+    }
   };
 
   setOpenDialog = (dialogType: AppState["openDialog"]) => {
@@ -4840,16 +4851,16 @@ class App extends React.Component<AppProps, AppState> {
 
     const initialScale = gesture.initialScale;
     if (initialScale) {
-      this.setState((state) => ({
+      this.setState({
         ...getStateForZoom(
           {
             viewportX: this.lastViewportPosition.x,
             viewportY: this.lastViewportPosition.y,
             nextZoom: getNormalizedZoom(initialScale * event.scale),
           },
-          state,
+          this.pendingState,
         ),
-      }));
+      });
     }
   });
 
@@ -4938,15 +4949,15 @@ class App extends React.Component<AppProps, AppState> {
           // TODO either move this into finalize as well, or handle all state
           // updates in one place, skipping finalize action
           flushSync(() => {
-            this.setState((prevState) => ({
+            this.setState({
               selectedElementIds: makeNextSelectedElementIds(
                 {
-                  ...prevState.selectedElementIds,
+                  ...this.pendingState.selectedElementIds,
                   [elementIdToSelect]: true,
                 },
-                prevState,
+                this.pendingState,
               ),
-            }));
+            });
           });
         }
         if (isDeleted) {
@@ -5520,18 +5531,18 @@ class App extends React.Component<AppProps, AppState> {
 
       if (selectedGroupId) {
         this.store.scheduleCapture();
-        this.setState((prevState) => ({
-          ...prevState,
+        this.setState({
+          ...this.pendingState,
           ...selectGroupsForSelectedElements(
             {
               editingGroupId: selectedGroupId,
               selectedElementIds: { [hitElement!.id]: true },
             },
             this.scene.getNonDeletedElements(),
-            prevState,
+            this.pendingState,
             this,
           ),
-        }));
+        });
         return;
       }
     }
@@ -5740,25 +5751,23 @@ class App extends React.Component<AppProps, AppState> {
         ? getNormalizedZoom(initialScale * scaleFactor)
         : this.state.zoom.value;
 
-      this.setState((state) => {
-        const zoomState = getStateForZoom(
-          {
-            viewportX: center.x,
-            viewportY: center.y,
-            nextZoom,
-          },
-          state,
-        );
+      const zoomState = getStateForZoom(
+        {
+          viewportX: center.x,
+          viewportY: center.y,
+          nextZoom,
+        },
+        this.pendingState,
+      );
 
-        this.translateCanvas({
-          zoom: zoomState.zoom,
-          // 2x multiplier is just a magic number that makes this work correctly
-          // on touchscreen devices (note: if we get report that panning is slower/faster
-          // than actual movement, consider swapping with devicePixelRatio)
-          scrollX: zoomState.scrollX + 2 * (deltaX / nextZoom),
-          scrollY: zoomState.scrollY + 2 * (deltaY / nextZoom),
-          shouldCacheIgnoreZoom: true,
-        });
+      this.translateCanvas({
+        zoom: zoomState.zoom,
+        // 2x multiplier is just a magic number that makes this work correctly
+        // on touchscreen devices (note: if we get report that panning is slower/faster
+        // than actual movement, consider swapping with devicePixelRatio)
+        scrollX: zoomState.scrollX + 2 * (deltaX / nextZoom),
+        scrollY: zoomState.scrollY + 2 * (deltaY / nextZoom),
+        shouldCacheIgnoreZoom: true,
       });
       this.resetShouldCacheIgnoreZoomDebounced();
     } else {
@@ -5814,36 +5823,30 @@ class App extends React.Component<AppProps, AppState> {
         this.scene.getNonDeletedElementsMap(),
       );
 
-      this.setState((prevState) => {
-        const nextSnapLines = updateStable(prevState.snapLines, snapLines);
-        const nextOriginOffset = prevState.originSnapOffset
-          ? updateStable(prevState.originSnapOffset, originOffset)
-          : originOffset;
+      const nextSnapLines = updateStable(
+        this.pendingState.snapLines,
+        snapLines,
+      );
+      const nextOriginOffset = this.pendingState.originSnapOffset
+        ? updateStable(this.pendingState.originSnapOffset, originOffset)
+        : originOffset;
 
-        if (
-          prevState.snapLines === nextSnapLines &&
-          prevState.originSnapOffset === nextOriginOffset
-        ) {
-          return null;
-        }
-        return {
+      if (
+        this.pendingState.snapLines !== nextSnapLines ||
+        this.pendingState.originSnapOffset !== nextOriginOffset
+      ) {
+        this.setState({
           snapLines: nextSnapLines,
           originSnapOffset: nextOriginOffset,
-        };
-      });
+        });
+      }
     } else if (
       !this.state.newElement &&
       !this.state.selectedElementsAreBeingDragged &&
-      !this.state.selectionElement
+      !this.state.selectionElement &&
+      this.pendingState.snapLines.length
     ) {
-      this.setState((prevState) => {
-        if (prevState.snapLines.length) {
-          return {
-            snapLines: [],
-          };
-        }
-        return null;
-      });
+      this.setState({ snapLines: [] });
     }
 
     if (
@@ -6196,29 +6199,30 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     if (this.state.openDialog?.name === "elementLinkSelector" && hitElement) {
-      this.setState((prevState) => {
-        return {
-          hoveredElementIds: updateStable(
-            prevState.hoveredElementIds,
-            selectGroupsForSelectedElements(
-              {
-                editingGroupId: prevState.editingGroupId,
-                selectedElementIds: { [hitElement!.id]: true },
-              },
-              this.scene.getNonDeletedElements(),
-              prevState,
-              this,
-            ).selectedElementIds,
-          ),
-        };
+      this.setState({
+        hoveredElementIds: updateStable(
+          this.pendingState.hoveredElementIds,
+          selectGroupsForSelectedElements(
+            {
+              editingGroupId: this.pendingState.editingGroupId,
+              selectedElementIds: { [hitElement!.id]: true },
+            },
+            this.scene.getNonDeletedElements(),
+            this.pendingState,
+            this,
+          ).selectedElementIds,
+        ),
       });
     } else if (
       this.state.openDialog?.name === "elementLinkSelector" &&
       !hitElement
     ) {
-      this.setState((prevState) => ({
-        hoveredElementIds: updateStable(prevState.hoveredElementIds, {}),
-      }));
+      this.setState({
+        hoveredElementIds: updateStable(
+          this.pendingState.hoveredElementIds,
+          {},
+        ),
+      });
     }
   };
 
@@ -6349,16 +6353,16 @@ class App extends React.Component<AppProps, AppState> {
     this.maybeUnfollowRemoteUser();
 
     if (this.state.searchMatches) {
-      this.setState((state) => {
-        return {
-          searchMatches: state.searchMatches && {
-            focusedId: null,
-            matches: state.searchMatches.matches.map((searchMatch) => ({
+      this.setState({
+        searchMatches: this.pendingState.searchMatches && {
+          focusedId: null,
+          matches: this.pendingState.searchMatches.matches.map(
+            (searchMatch) => ({
               ...searchMatch,
               focus: false,
-            })),
-          },
-        };
+            }),
+          ),
+        },
       });
       this.updateEditorAtom(searchItemInFocusAtom, null);
     }
@@ -6435,11 +6439,9 @@ class App extends React.Component<AppProps, AppState> {
     //fires only once, if pen is detected, penMode is enabled
     //the user can disable this by toggling the penMode button
     if (!this.state.penDetected && event.pointerType === "pen") {
-      this.setState((prevState) => {
-        return {
-          penMode: true,
-          penDetected: true,
-        };
+      this.setState({
+        penMode: true,
+        penDetected: true,
       });
     }
 
@@ -7241,10 +7243,10 @@ class App extends React.Component<AppProps, AppState> {
             if (!this.state.selectedElementIds[hitElement.id]) {
               pointerDownState.hit.wasAddedToSelection = true;
             }
-            this.setState((prevState) => ({
-              ...editGroupForSelectedElement(prevState, hitElement),
+            this.setState({
+              ...editGroupForSelectedElement(this.pendingState, hitElement),
               previousSelectedElementIds: this.state.selectedElementIds,
-            }));
+            });
             // mark as not completely handled so as to allow dragging etc.
             return false;
           }
@@ -7276,110 +7278,112 @@ class App extends React.Component<AppProps, AppState> {
               !someHitElementIsSelected &&
               !pointerDownState.hit.hasHitCommonBoundingBoxOfSelectedElements
             ) {
-              this.setState((prevState) => {
-                let nextSelectedElementIds: { [id: string]: true } = {
-                  ...prevState.selectedElementIds,
-                  [hitElement.id]: true,
-                };
+              let nextSelectedElementIds: { [id: string]: true } = {
+                ...this.pendingState.selectedElementIds,
+                [hitElement.id]: true,
+              };
 
-                const previouslySelectedElements: ExcalidrawElement[] = [];
+              const previouslySelectedElements: ExcalidrawElement[] = [];
 
-                Object.keys(prevState.selectedElementIds).forEach((id) => {
+              Object.keys(this.pendingState.selectedElementIds).forEach(
+                (id) => {
                   const element = this.scene.getElement(id);
                   element && previouslySelectedElements.push(element);
+                },
+              );
+
+              // if hitElement is frame-like, deselect all of its elements
+              // if they are selected
+              if (isFrameLikeElement(hitElement)) {
+                getFrameChildren(
+                  previouslySelectedElements,
+                  hitElement.id,
+                ).forEach((element) => {
+                  delete nextSelectedElementIds[element.id];
                 });
-
-                // if hitElement is frame-like, deselect all of its elements
-                // if they are selected
-                if (isFrameLikeElement(hitElement)) {
-                  getFrameChildren(
-                    previouslySelectedElements,
-                    hitElement.id,
-                  ).forEach((element) => {
-                    delete nextSelectedElementIds[element.id];
-                  });
-                } else if (hitElement.frameId) {
-                  // if hitElement is in a frame and its frame has been selected
-                  // disable selection for the given element
-                  if (nextSelectedElementIds[hitElement.frameId]) {
-                    delete nextSelectedElementIds[hitElement.id];
-                  }
-                } else {
-                  // hitElement is neither a frame nor an element in a frame
-                  // but since hitElement could be in a group with some frames
-                  // this means selecting hitElement will have the frames selected as well
-                  // because we want to keep the invariant:
-                  // - frames and their elements are not selected at the same time
-                  // we deselect elements in those frames that were previously selected
-
-                  const groupIds = hitElement.groupIds;
-                  const framesInGroups = new Set(
-                    groupIds
-                      .flatMap((gid) =>
-                        getElementsInGroup(
-                          this.scene.getNonDeletedElements(),
-                          gid,
-                        ),
-                      )
-                      .filter((element) => isFrameLikeElement(element))
-                      .map((frame) => frame.id),
-                  );
-
-                  if (framesInGroups.size > 0) {
-                    previouslySelectedElements.forEach((element) => {
-                      if (
-                        element.frameId &&
-                        framesInGroups.has(element.frameId)
-                      ) {
-                        // deselect element and groups containing the element
-                        delete nextSelectedElementIds[element.id];
-                        element.groupIds
-                          .flatMap((gid) =>
-                            getElementsInGroup(
-                              this.scene.getNonDeletedElements(),
-                              gid,
-                            ),
-                          )
-                          .forEach((element) => {
-                            delete nextSelectedElementIds[element.id];
-                          });
-                      }
-                    });
-                  }
+              } else if (hitElement.frameId) {
+                // if hitElement is in a frame and its frame has been selected
+                // disable selection for the given element
+                if (nextSelectedElementIds[hitElement.frameId]) {
+                  delete nextSelectedElementIds[hitElement.id];
                 }
+              } else {
+                // hitElement is neither a frame nor an element in a frame
+                // but since hitElement could be in a group with some frames
+                // this means selecting hitElement will have the frames selected as well
+                // because we want to keep the invariant:
+                // - frames and their elements are not selected at the same time
+                // we deselect elements in those frames that were previously selected
 
-                // Finally, in shape selection mode, we'd like to
-                // keep only one shape or group selected at a time.
-                // This means, if the hitElement is a different shape or group
-                // than the previously selected ones, we deselect the previous ones
-                // and select the hitElement
-                if (prevState.openDialog?.name === "elementLinkSelector") {
-                  if (
-                    !hitElement.groupIds.some(
-                      (gid) => prevState.selectedGroupIds[gid],
+                const groupIds = hitElement.groupIds;
+                const framesInGroups = new Set(
+                  groupIds
+                    .flatMap((gid) =>
+                      getElementsInGroup(
+                        this.scene.getNonDeletedElements(),
+                        gid,
+                      ),
                     )
-                  ) {
-                    nextSelectedElementIds = {
-                      [hitElement.id]: true,
-                    };
-                  }
-                }
+                    .filter((element) => isFrameLikeElement(element))
+                    .map((frame) => frame.id),
+                );
 
-                return {
-                  ...selectGroupsForSelectedElements(
-                    {
-                      editingGroupId: prevState.editingGroupId,
-                      selectedElementIds: nextSelectedElementIds,
-                    },
-                    this.scene.getNonDeletedElements(),
-                    prevState,
-                    this,
-                  ),
-                  showHyperlinkPopup:
-                    hitElement.link || isEmbeddableElement(hitElement)
-                      ? "info"
-                      : false,
-                };
+                if (framesInGroups.size > 0) {
+                  previouslySelectedElements.forEach((element) => {
+                    if (
+                      element.frameId &&
+                      framesInGroups.has(element.frameId)
+                    ) {
+                      // deselect element and groups containing the element
+                      delete nextSelectedElementIds[element.id];
+                      element.groupIds
+                        .flatMap((gid) =>
+                          getElementsInGroup(
+                            this.scene.getNonDeletedElements(),
+                            gid,
+                          ),
+                        )
+                        .forEach((element) => {
+                          delete nextSelectedElementIds[element.id];
+                        });
+                    }
+                  });
+                }
+              }
+
+              // Finally, in shape selection mode, we'd like to
+              // keep only one shape or group selected at a time.
+              // This means, if the hitElement is a different shape or group
+              // than the previously selected ones, we deselect the previous ones
+              // and select the hitElement
+              if (
+                this.pendingState.openDialog?.name === "elementLinkSelector"
+              ) {
+                if (
+                  !hitElement.groupIds.some(
+                    (gid) => this.pendingState.selectedGroupIds[gid],
+                  )
+                ) {
+                  nextSelectedElementIds = {
+                    [hitElement.id]: true,
+                  };
+                }
+              }
+
+              this.setState({
+                ...selectGroupsForSelectedElements(
+                  {
+                    editingGroupId: this.pendingState.editingGroupId,
+                    selectedElementIds: nextSelectedElementIds,
+                  },
+                  this.scene.getNonDeletedElements(),
+                  this.pendingState,
+                  this,
+                ),
+                showHyperlinkPopup:
+                  hitElement.link || isEmbeddableElement(hitElement)
+                    ? "info"
+                    : false,
               });
               pointerDownState.hit.wasAddedToSelection = true;
             }
@@ -7501,17 +7505,15 @@ class App extends React.Component<AppProps, AppState> {
 
     this.scene.insertElement(element);
 
-    this.setState((prevState) => {
-      const nextSelectedElementIds = {
-        ...prevState.selectedElementIds,
-      };
-      delete nextSelectedElementIds[element.id];
-      return {
-        selectedElementIds: makeNextSelectedElementIds(
-          nextSelectedElementIds,
-          prevState,
-        ),
-      };
+    const nextSelectedElementIds = {
+      ...this.pendingState.selectedElementIds,
+    };
+    delete nextSelectedElementIds[element.id];
+    this.setState({
+      selectedElementIds: makeNextSelectedElementIds(
+        nextSelectedElementIds,
+        this.pendingState,
+      ),
     });
 
     const boundElement = getHoveredElementForBinding(
@@ -7727,15 +7729,15 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
-      this.setState((prevState) => ({
+      this.setState({
         selectedElementIds: makeNextSelectedElementIds(
           {
-            ...prevState.selectedElementIds,
+            ...this.pendingState.selectedElementIds,
             [multiElement.id]: true,
           },
-          prevState,
+          this.pendingState,
         ),
-      }));
+      });
       // clicking outside commit zone → update reference for last committed
       // point
       this.scene.mutateElement(multiElement, {
@@ -7812,17 +7814,15 @@ class App extends React.Component<AppProps, AppState> {
               locked: false,
               frameId: topLayerFrame ? topLayerFrame.id : null,
             });
-      this.setState((prevState) => {
-        const nextSelectedElementIds = {
-          ...prevState.selectedElementIds,
-        };
-        delete nextSelectedElementIds[element.id];
-        return {
-          selectedElementIds: makeNextSelectedElementIds(
-            nextSelectedElementIds,
-            prevState,
-          ),
-        };
+      const nextSelectedElementIds = {
+        ...this.pendingState.selectedElementIds,
+      };
+      delete nextSelectedElementIds[element.id];
+      this.setState({
+        selectedElementIds: makeNextSelectedElementIds(
+          nextSelectedElementIds,
+          this.pendingState,
+        ),
       });
       this.scene.mutateElement(element, {
         points: [...element.points, pointFrom<LocalPoint>(0, 0)],
@@ -8582,13 +8582,13 @@ class App extends React.Component<AppProps, AppState> {
               );
 
               // switch selected elements to the duplicated ones
-              this.setState((prevState) => ({
+              this.setState({
                 ...getSelectionStateForElements(
                   duplicatedElements,
                   this.scene.getNonDeletedElements(),
-                  prevState,
+                  this.pendingState,
                 ),
-              }));
+              });
 
               this.scene.replaceAllElements(elementsWithIndices);
               this.maybeCacheVisibleGaps(event, selectedElements, true);
@@ -8756,16 +8756,16 @@ class App extends React.Component<AppProps, AppState> {
               pointerDownState.withCmdOrCtrl &&
               pointerDownState.hit.element
             ) {
-              this.setState((prevState) =>
+              this.setState(
                 selectGroupsForSelectedElements(
                   {
-                    ...prevState,
+                    ...this.pendingState,
                     selectedElementIds: {
                       [pointerDownState.hit.element!.id]: true,
                     },
                   },
                   this.scene.getNonDeletedElements(),
-                  prevState,
+                  this.pendingState,
                   this,
                 ),
               );
@@ -8782,58 +8782,60 @@ class App extends React.Component<AppProps, AppState> {
               )
             : [];
 
-          this.setState((prevState) => {
-            const nextSelectedElementIds = {
-              ...(shouldReuseSelection && prevState.selectedElementIds),
-              ...elementsWithinSelection.reduce(
-                (acc: Record<ExcalidrawElement["id"], true>, element) => {
-                  acc[element.id] = true;
-                  return acc;
-                },
-                {},
-              ),
-            };
+          const nextSelectedElementIds = {
+            ...(shouldReuseSelection && this.pendingState.selectedElementIds),
+            ...elementsWithinSelection.reduce(
+              (acc: Record<ExcalidrawElement["id"], true>, element) => {
+                acc[element.id] = true;
+                return acc;
+              },
+              {},
+            ),
+          };
 
-            if (pointerDownState.hit.element) {
-              // if using ctrl/cmd, select the hitElement only if we
-              // haven't box-selected anything else
-              if (!elementsWithinSelection.length) {
-                nextSelectedElementIds[pointerDownState.hit.element.id] = true;
-              } else {
-                delete nextSelectedElementIds[pointerDownState.hit.element.id];
-              }
+          if (pointerDownState.hit.element) {
+            // if using ctrl/cmd, select the hitElement only if we
+            // haven't box-selected anything else
+            if (!elementsWithinSelection.length) {
+              nextSelectedElementIds[pointerDownState.hit.element.id] = true;
+            } else {
+              delete nextSelectedElementIds[pointerDownState.hit.element.id];
             }
+          }
 
-            prevState = !shouldReuseSelection
-              ? { ...prevState, selectedGroupIds: {}, editingGroupId: null }
-              : prevState;
+          const prevState = !shouldReuseSelection
+            ? {
+                ...this.pendingState,
+                selectedGroupIds: {},
+                editingGroupId: null,
+              }
+            : this.pendingState;
 
-            return {
-              ...selectGroupsForSelectedElements(
-                {
-                  editingGroupId: prevState.editingGroupId,
-                  selectedElementIds: nextSelectedElementIds,
-                },
-                this.scene.getNonDeletedElements(),
-                prevState,
-                this,
-              ),
-              // select linear element only when we haven't box-selected anything else
-              selectedLinearElement:
-                elementsWithinSelection.length === 1 &&
-                isLinearElement(elementsWithinSelection[0])
-                  ? new LinearElementEditor(
-                      elementsWithinSelection[0],
-                      this.scene.getNonDeletedElementsMap(),
-                    )
-                  : null,
-              showHyperlinkPopup:
-                elementsWithinSelection.length === 1 &&
-                (elementsWithinSelection[0].link ||
-                  isEmbeddableElement(elementsWithinSelection[0]))
-                  ? "info"
-                  : false,
-            };
+          this.setState({
+            ...selectGroupsForSelectedElements(
+              {
+                editingGroupId: prevState.editingGroupId,
+                selectedElementIds: nextSelectedElementIds,
+              },
+              this.scene.getNonDeletedElements(),
+              prevState,
+              this,
+            ),
+            // select linear element only when we haven't box-selected anything else
+            selectedLinearElement:
+              elementsWithinSelection.length === 1 &&
+              isLinearElement(elementsWithinSelection[0])
+                ? new LinearElementEditor(
+                    elementsWithinSelection[0],
+                    this.scene.getNonDeletedElementsMap(),
+                  )
+                : null,
+            showHyperlinkPopup:
+              elementsWithinSelection.length === 1 &&
+              (elementsWithinSelection[0].link ||
+                isEmbeddableElement(elementsWithinSelection[0]))
+                ? "info"
+                : false,
           });
         }
       }
@@ -8892,7 +8894,7 @@ class App extends React.Component<AppProps, AppState> {
         isCropping,
       } = this.state;
 
-      this.setState((prevState) => ({
+      this.setState({
         isResizing: false,
         isRotating: false,
         isCropping: false,
@@ -8901,9 +8903,9 @@ class App extends React.Component<AppProps, AppState> {
         frameToHighlight: null,
         elementsToHighlight: null,
         cursorButton: "up",
-        snapLines: updateStable(prevState.snapLines, []),
+        snapLines: updateStable(this.pendingState.snapLines, []),
         originSnapOffset: null,
-      }));
+      });
 
       // just in case, tool changes mid drag, always clean up
       this.lassoTrail.endPath();
@@ -9134,27 +9136,27 @@ class App extends React.Component<AppProps, AppState> {
           this.setState({ suggestedBindings: [], startBoundElement: null });
           if (!activeTool.locked) {
             resetCursor(this.interactiveCanvas);
-            this.setState((prevState) => ({
+            this.setState({
               newElement: null,
               activeTool: updateActiveTool(this.state, {
                 type: "selection",
               }),
               selectedElementIds: makeNextSelectedElementIds(
                 {
-                  ...prevState.selectedElementIds,
+                  ...this.pendingState.selectedElementIds,
                   [newElement.id]: true,
                 },
-                prevState,
+                this.pendingState,
               ),
               selectedLinearElement: new LinearElementEditor(
                 newElement,
                 this.scene.getNonDeletedElementsMap(),
               ),
-            }));
+            });
           } else {
-            this.setState((prevState) => ({
+            this.setState({
               newElement: null,
-            }));
+            });
           }
           // so that the scene gets rendered again to display the newly drawn linear as well
           this.scene.triggerUpdate();
@@ -9493,72 +9495,68 @@ class App extends React.Component<AppProps, AppState> {
         if (childEvent.shiftKey && !this.state.editingLinearElement) {
           if (this.state.selectedElementIds[hitElement.id]) {
             if (isSelectedViaGroup(this.state, hitElement)) {
-              this.setState((_prevState) => {
-                const nextSelectedElementIds = {
-                  ..._prevState.selectedElementIds,
-                };
+              const nextSelectedElementIds = {
+                ...this.pendingState.selectedElementIds,
+              };
 
-                // We want to unselect all groups hitElement is part of
-                // as well as all elements that are part of the groups
-                // hitElement is part of
-                for (const groupedElement of hitElement.groupIds.flatMap(
-                  (groupId) =>
-                    getElementsInGroup(
-                      this.scene.getNonDeletedElements(),
-                      groupId,
-                    ),
-                )) {
-                  delete nextSelectedElementIds[groupedElement.id];
-                }
-
-                return {
-                  selectedGroupIds: {
-                    ..._prevState.selectedElementIds,
-                    ...hitElement.groupIds
-                      .map((gId) => ({ [gId]: false }))
-                      .reduce((prev, acc) => ({ ...prev, ...acc }), {}),
-                  },
-                  selectedElementIds: makeNextSelectedElementIds(
-                    nextSelectedElementIds,
-                    _prevState,
+              // We want to unselect all groups hitElement is part of
+              // as well as all elements that are part of the groups
+              // hitElement is part of
+              for (const groupedElement of hitElement.groupIds.flatMap(
+                (groupId) =>
+                  getElementsInGroup(
+                    this.scene.getNonDeletedElements(),
+                    groupId,
                   ),
-                };
+              )) {
+                delete nextSelectedElementIds[groupedElement.id];
+              }
+
+              this.setState({
+                selectedGroupIds: {
+                  ...this.pendingState.selectedElementIds,
+                  ...hitElement.groupIds
+                    .map((gId) => ({ [gId]: false }))
+                    .reduce((prev, acc) => ({ ...prev, ...acc }), {}),
+                },
+                selectedElementIds: makeNextSelectedElementIds(
+                  nextSelectedElementIds,
+                  this.pendingState,
+                ),
               });
               // if not dragging a linear element point (outside editor)
             } else if (!this.state.selectedLinearElement?.isDragging) {
               // remove element from selection while
               // keeping prev elements selected
 
-              this.setState((prevState) => {
-                const newSelectedElementIds = {
-                  ...prevState.selectedElementIds,
-                };
-                delete newSelectedElementIds[hitElement!.id];
-                const newSelectedElements = getSelectedElements(
-                  this.scene.getNonDeletedElements(),
-                  { selectedElementIds: newSelectedElementIds },
-                );
+              const newSelectedElementIds = {
+                ...this.pendingState.selectedElementIds,
+              };
+              delete newSelectedElementIds[hitElement!.id];
+              const newSelectedElements = getSelectedElements(
+                this.scene.getNonDeletedElements(),
+                { selectedElementIds: newSelectedElementIds },
+              );
 
-                return {
-                  ...selectGroupsForSelectedElements(
-                    {
-                      editingGroupId: prevState.editingGroupId,
-                      selectedElementIds: newSelectedElementIds,
-                    },
-                    this.scene.getNonDeletedElements(),
-                    prevState,
-                    this,
-                  ),
-                  // set selectedLinearElement only if thats the only element selected
-                  selectedLinearElement:
-                    newSelectedElements.length === 1 &&
-                    isLinearElement(newSelectedElements[0])
-                      ? new LinearElementEditor(
-                          newSelectedElements[0],
-                          this.scene.getNonDeletedElementsMap(),
-                        )
-                      : prevState.selectedLinearElement,
-                };
+              this.setState({
+                ...selectGroupsForSelectedElements(
+                  {
+                    editingGroupId: this.pendingState.editingGroupId,
+                    selectedElementIds: newSelectedElementIds,
+                  },
+                  this.scene.getNonDeletedElements(),
+                  this.pendingState,
+                  this,
+                ),
+                // set selectedLinearElement only if thats the only element selected
+                selectedLinearElement:
+                  newSelectedElements.length === 1 &&
+                  isLinearElement(newSelectedElements[0])
+                    ? new LinearElementEditor(
+                        newSelectedElements[0],
+                        this.scene.getNonDeletedElementsMap(),
+                      )
+                    : this.pendingState.selectedLinearElement,
               });
             }
           } else if (
@@ -9567,75 +9565,74 @@ class App extends React.Component<AppProps, AppState> {
           ) {
             // when hitElement is part of a selected frame, deselect the frame
             // to avoid frame and containing elements selected simultaneously
-            this.setState((prevState) => {
-              const nextSelectedElementIds: {
-                [id: string]: true;
-              } = {
-                ...prevState.selectedElementIds,
-                [hitElement.id]: true,
-              };
-              // deselect the frame
-              delete nextSelectedElementIds[hitElement.frameId!];
+            const nextSelectedElementIds: {
+              [id: string]: true;
+            } = {
+              ...this.pendingState.selectedElementIds,
+              [hitElement.id]: true,
+            };
+            // deselect the frame
+            delete nextSelectedElementIds[hitElement.frameId!];
 
-              // deselect groups containing the frame
-              (this.scene.getElement(hitElement.frameId!)?.groupIds ?? [])
-                .flatMap((gid) =>
-                  getElementsInGroup(this.scene.getNonDeletedElements(), gid),
-                )
-                .forEach((element) => {
-                  delete nextSelectedElementIds[element.id];
-                });
+            // deselect groups containing the frame
+            (this.scene.getElement(hitElement.frameId!)?.groupIds ?? [])
+              .flatMap((gid) =>
+                getElementsInGroup(this.scene.getNonDeletedElements(), gid),
+              )
+              .forEach((element) => {
+                delete nextSelectedElementIds[element.id];
+              });
 
-              return {
-                ...selectGroupsForSelectedElements(
-                  {
-                    editingGroupId: prevState.editingGroupId,
-                    selectedElementIds: nextSelectedElementIds,
-                  },
-                  this.scene.getNonDeletedElements(),
-                  prevState,
-                  this,
-                ),
-                showHyperlinkPopup:
-                  hitElement.link || isEmbeddableElement(hitElement)
-                    ? "info"
-                    : false,
-              };
+            this.setState({
+              ...selectGroupsForSelectedElements(
+                {
+                  editingGroupId: this.pendingState.editingGroupId,
+                  selectedElementIds: nextSelectedElementIds,
+                },
+                this.scene.getNonDeletedElements(),
+                this.pendingState,
+                this,
+              ),
+              showHyperlinkPopup:
+                hitElement.link || isEmbeddableElement(hitElement)
+                  ? "info"
+                  : false,
             });
           } else {
             // add element to selection while keeping prev elements selected
-            this.setState((_prevState) => ({
+            this.setState({
               selectedElementIds: makeNextSelectedElementIds(
                 {
-                  ..._prevState.selectedElementIds,
+                  ...this.pendingState.selectedElementIds,
                   [hitElement!.id]: true,
                 },
-                _prevState,
+                this.pendingState,
               ),
-            }));
+            });
           }
         } else {
-          this.setState((prevState) => ({
+          this.setState({
             ...selectGroupsForSelectedElements(
               {
-                editingGroupId: prevState.editingGroupId,
+                editingGroupId: this.pendingState.editingGroupId,
                 selectedElementIds: { [hitElement.id]: true },
               },
               this.scene.getNonDeletedElements(),
-              prevState,
+              this.pendingState,
               this,
             ),
             selectedLinearElement:
               isLinearElement(hitElement) &&
               // Don't set `selectedLinearElement` if its same as the hitElement, this is mainly to prevent resetting the `hoverPointIndex` to -1.
               // Future we should update the API to take care of setting the correct `hoverPointIndex` when initialized
-              prevState.selectedLinearElement?.elementId !== hitElement.id
+              this.pendingState.selectedLinearElement?.elementId !==
+                hitElement.id
                 ? new LinearElementEditor(
                     hitElement,
                     this.scene.getNonDeletedElementsMap(),
                   )
-                : prevState.selectedLinearElement,
-          }));
+                : this.pendingState.selectedLinearElement,
+          });
         }
       }
 
@@ -9685,19 +9682,19 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       if (!activeTool.locked && activeTool.type !== "freedraw" && newElement) {
-        this.setState((prevState) => ({
+        this.setState({
           selectedElementIds: makeNextSelectedElementIds(
             {
-              ...prevState.selectedElementIds,
+              ...this.pendingState.selectedElementIds,
               [newElement.id]: true,
             },
-            prevState,
+            this.pendingState,
           ),
           showHyperlinkPopup:
             isEmbeddableElement(newElement) && !newElement.link
               ? "editor"
-              : prevState.showHyperlinkPopup,
-        }));
+              : this.pendingState.showHyperlinkPopup,
+        });
       }
 
       if (
@@ -10180,19 +10177,19 @@ class App extends React.Component<AppProps, AppState> {
   };
 
   private clearSelection(hitElement: ExcalidrawElement | null): void {
-    this.setState((prevState) => ({
-      selectedElementIds: makeNextSelectedElementIds({}, prevState),
+    this.setState({
+      selectedElementIds: makeNextSelectedElementIds({}, this.pendingState),
       activeEmbeddable: null,
       selectedGroupIds: {},
       // Continue editing the same group if the user selected a different
       // element from it
       editingGroupId:
-        prevState.editingGroupId &&
+        this.pendingState.editingGroupId &&
         hitElement != null &&
-        isElementInGroup(hitElement, prevState.editingGroupId)
-          ? prevState.editingGroupId
+        isElementInGroup(hitElement, this.pendingState.editingGroupId)
+          ? this.pendingState.editingGroupId
           : null,
-    }));
+    });
     this.setState({
       selectedElementIds: makeNextSelectedElementIds({}, this.state),
       activeEmbeddable: null,
@@ -10961,34 +10958,38 @@ class App extends React.Component<AppProps, AppState> {
           // reduced amplification for small deltas (small movements on a trackpad)
           Math.min(1, absDelta / 20);
 
-        this.translateCanvas((state) => ({
+        this.translateCanvas({
           ...getStateForZoom(
             {
               viewportX: this.lastViewportPosition.x,
               viewportY: this.lastViewportPosition.y,
               nextZoom: getNormalizedZoom(newZoom),
             },
-            state,
+            this.pendingState,
           ),
           shouldCacheIgnoreZoom: true,
-        }));
+        });
         this.resetShouldCacheIgnoreZoomDebounced();
         return;
       }
 
       // scroll horizontally when shift pressed
       if (event.shiftKey) {
-        this.translateCanvas(({ zoom, scrollX }) => ({
+        this.translateCanvas({
           // on Mac, shift+wheel tends to result in deltaX
-          scrollX: scrollX - (deltaY || deltaX) / zoom.value,
-        }));
+          scrollX:
+            this.pendingState.scrollX -
+            (deltaY || deltaX) / this.pendingState.zoom.value,
+        });
         return;
       }
 
-      this.translateCanvas(({ zoom, scrollX, scrollY }) => ({
-        scrollX: scrollX - deltaX / zoom.value,
-        scrollY: scrollY - deltaY / zoom.value,
-      }));
+      this.translateCanvas({
+        scrollX:
+          this.pendingState.scrollX - deltaX / this.pendingState.zoom.value,
+        scrollY:
+          this.pendingState.scrollY - deltaY / this.pendingState.zoom.value,
+      });
     },
   );
 

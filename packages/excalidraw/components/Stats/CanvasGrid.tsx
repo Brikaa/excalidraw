@@ -1,3 +1,5 @@
+import type App from "@excalidraw/excalidraw/components/App";
+
 import type { Scene } from "@excalidraw/element";
 
 import { getNormalizedGridStep } from "../../scene";
@@ -11,7 +13,7 @@ interface PositionProps {
   property: "gridStep";
   scene: Scene;
   appState: AppState;
-  setAppState: React.Component<any, AppState>["setState"];
+  setAppState: App["setState"];
 }
 
 const STEP_SIZE = 5;

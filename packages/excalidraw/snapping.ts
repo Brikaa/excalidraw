@@ -157,7 +157,7 @@ export class SnapCache {
 // -----------------------------------------------------------------------------
 
 export const isGridModeEnabled = (app: AppClassProperties): boolean =>
-  app.props.gridModeEnabled ?? app.state.gridModeEnabled;
+  app.props.gridModeEnabled ?? app.pendingState.gridModeEnabled;
 
 export const isSnappingEnabled = ({
   event,
@@ -170,9 +170,9 @@ export const isSnappingEnabled = ({
 }) => {
   if (event) {
     return (
-      app.state.activeTool.type !== "lasso" &&
-      ((app.state.objectsSnapModeEnabled && !event[KEYS.CTRL_OR_CMD]) ||
-        (!app.state.objectsSnapModeEnabled &&
+      app.pendingState.activeTool.type !== "lasso" &&
+      ((app.pendingState.objectsSnapModeEnabled && !event[KEYS.CTRL_OR_CMD]) ||
+        (!app.pendingState.objectsSnapModeEnabled &&
           event[KEYS.CTRL_OR_CMD] &&
           !isGridModeEnabled(app)))
     );
@@ -182,7 +182,7 @@ export const isSnappingEnabled = ({
   if (selectedElements.length === 1 && selectedElements[0].type === "arrow") {
     return false;
   }
-  return app.state.objectsSnapModeEnabled;
+  return app.pendingState.objectsSnapModeEnabled;
 };
 
 export const areRoughlyEqual = (a: number, b: number, precision = 0.01) => {
@@ -697,7 +697,7 @@ export const snapDraggedElements = (
   event: KeyboardModifiersObject,
   elementsMap: ElementsMap,
 ) => {
-  const appState = app.state;
+  const appState = app.pendingState;
   const selectedElements = getSelectedElements(elements, appState);
   if (
     !isSnappingEnabled({ app, event, selectedElements }) ||
@@ -1183,7 +1183,7 @@ export const snapResizingElements = (
     }
   }
 
-  const snapDistance = getSnapDistance(app.state.zoom.value);
+  const snapDistance = getSnapDistance(app.pendingState.zoom.value);
 
   const minOffset = {
     x: snapDistance,
@@ -1263,7 +1263,7 @@ export const snapNewElement = (
     pointFrom(origin.x + dragOffset.x, origin.y + dragOffset.y),
   ];
 
-  const snapDistance = getSnapDistance(app.state.zoom.value);
+  const snapDistance = getSnapDistance(app.pendingState.zoom.value);
 
   const minOffset = {
     x: snapDistance,
@@ -1333,11 +1333,11 @@ export const getSnapLinesAtPointer = (
   const referenceElements = getVisibleAndNonSelectedElements(
     elements,
     [],
-    app.state,
+    app.pendingState,
     elementsMap,
   );
 
-  const snapDistance = getSnapDistance(app.state.zoom.value);
+  const snapDistance = getSnapDistance(app.pendingState.zoom.value);
 
   const minOffset = {
     x: snapDistance,

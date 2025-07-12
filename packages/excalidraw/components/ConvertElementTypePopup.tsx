@@ -866,8 +866,8 @@ const convertElementType = <
             type: "arrow",
             elbowed: false,
             roundness: null,
-            startArrowhead: app.state.currentItemStartArrowhead,
-            endArrowhead: app.state.currentItemEndArrowhead,
+            startArrowhead: app.pendingState.currentItemStartArrowhead,
+            endArrowhead: app.pendingState.currentItemEndArrowhead,
           }),
         );
       }
@@ -880,8 +880,8 @@ const convertElementType = <
             roundness: {
               type: ROUNDNESS.PROPORTIONAL_RADIUS,
             },
-            startArrowhead: app.state.currentItemStartArrowhead,
-            endArrowhead: app.state.currentItemEndArrowhead,
+            startArrowhead: app.pendingState.currentItemStartArrowhead,
+            endArrowhead: app.pendingState.currentItemEndArrowhead,
           }),
         );
       }

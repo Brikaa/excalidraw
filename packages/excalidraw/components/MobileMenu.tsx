@@ -4,6 +4,8 @@ import { showSelectedShapeActions } from "@excalidraw/element";
 
 import type { NonDeletedExcalidrawElement } from "@excalidraw/element/types";
 
+import type App from "@excalidraw/excalidraw/components/App";
+
 import { isHandToolActive } from "../appState";
 import { useTunnels } from "../context/tunnels";
 import { t } from "../i18n";
@@ -24,7 +26,6 @@ import type { ActionManager } from "../actions/manager";
 import type {
   AppClassProperties,
   AppProps,
-  AppState,
   Device,
   ExcalidrawProps,
   UIAppState,
@@ -36,7 +37,7 @@ type MobileMenuProps = {
   actionManager: ActionManager;
   renderJSONExportDialog: () => React.ReactNode;
   renderImageExportDialog: () => React.ReactNode;
-  setAppState: React.Component<any, AppState>["setState"];
+  setAppState: App["setState"];
   elements: readonly NonDeletedExcalidrawElement[];
   onLockToggle: () => void;
   onHandToolToggle: () => void;
@@ -200,9 +201,9 @@ export const MobileMenu = ({
                   type="button"
                   className="scroll-back-to-content"
                   onClick={() => {
-                    setAppState((appState) => ({
-                      ...calculateScrollCenter(elements, appState),
-                    }));
+                    setAppState({
+                      ...calculateScrollCenter(elements, app.pendingState),
+                    });
                   }}
                 >
                   {t("buttons.scrollBackToContent")}

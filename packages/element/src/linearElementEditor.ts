@@ -29,6 +29,8 @@ import {
   type Store,
 } from "@excalidraw/element";
 
+import type App from "@excalidraw/excalidraw/components/App";
+
 import type { Radians } from "@excalidraw/math";
 
 import type {
@@ -212,7 +214,7 @@ export class LinearElementEditor {
   static handleBoxSelection(
     event: PointerEvent,
     appState: AppState,
-    setState: React.Component<any, AppState>["setState"],
+    setState: App["setState"],
     elementsMap: NonDeletedSceneElementsMap,
   ) {
     if (!appState.editingLinearElement || !appState.selectionElement) {
@@ -451,7 +453,7 @@ export class LinearElementEditor {
             element,
             coords,
             app.scene,
-            app.state.zoom,
+            app.pendingState.zoom,
           );
         }
       }
@@ -478,8 +480,8 @@ export class LinearElementEditor {
       };
 
       return {
-        ...app.state,
-        editingLinearElement: app.state.editingLinearElement
+        ...app.pendingState,
+        editingLinearElement: app.pendingState.editingLinearElement
           ? newLinearElementEditor
           : null,
         selectedLinearElement: newLinearElementEditor,
@@ -847,7 +849,7 @@ export class LinearElementEditor {
     hitElement: NonDeleted<ExcalidrawElement> | null;
     linearElementEditor: LinearElementEditor | null;
   } {
-    const appState = app.state;
+    const appState = app.pendingState;
     const elementsMap = scene.getNonDeletedElementsMap();
     const elements = scene.getNonDeletedElements();
 
@@ -917,7 +919,7 @@ export class LinearElementEditor {
           scenePointer,
           elements,
           elementsMap,
-          app.state.zoom,
+          app.pendingState.zoom,
           linearElementEditor.elbowed,
         ),
       };
@@ -1022,7 +1024,7 @@ export class LinearElementEditor {
     scenePointerY: number,
     app: AppClassProperties,
   ): LinearElementEditor | null {
-    const appState = app.state;
+    const appState = app.pendingState;
     if (!appState.editingLinearElement) {
       return null;
     }
@@ -1331,7 +1333,7 @@ export class LinearElementEditor {
     pointIndices: readonly number[],
   ) {
     const isUncommittedPoint =
-      app.state.editingLinearElement?.lastUncommittedPoint ===
+      app.pendingState.editingLinearElement?.lastUncommittedPoint ===
       element.points[element.points.length - 1];
 
     const nextPoints = element.points.filter((_, idx) => {

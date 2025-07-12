@@ -41,6 +41,7 @@ import Footer from "./footer/Footer";
 import { isSidebarDockedAtom } from "./Sidebar/Sidebar";
 import MainMenu from "./main-menu/MainMenu";
 import { ActiveConfirmDialog } from "./ActiveConfirmDialog";
+
 import { useDevice } from "./App";
 import { OverwriteConfirmDialog } from "./OverwriteConfirm/OverwriteConfirm";
 import { LibraryIcon } from "./icons";
@@ -62,6 +63,8 @@ import { LaserPointerButton } from "./LaserPointerButton";
 import "./LayerUI.scss";
 import "./Toolbar.scss";
 
+import type App from "./App";
+
 import type { ActionManager } from "../actions/manager";
 
 import type { Language } from "../i18n";
@@ -79,7 +82,7 @@ interface LayerUIProps {
   appState: UIAppState;
   files: BinaryFiles;
   canvas: HTMLCanvasElement;
-  setAppState: React.Component<any, AppState>["setState"];
+  setAppState: App["setState"];
   elements: readonly NonDeletedExcalidrawElement[];
   onLockToggle: () => void;
   onHandToolToggle: () => void;
@@ -554,9 +557,9 @@ const LayerUI = ({
                 type="button"
                 className="scroll-back-to-content"
                 onClick={() => {
-                  setAppState((appState) => ({
-                    ...calculateScrollCenter(elements, appState),
-                  }));
+                  setAppState({
+                    ...calculateScrollCenter(elements, app.pendingState),
+                  });
                 }}
               >
                 {t("buttons.scrollBackToContent")}

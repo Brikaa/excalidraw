@@ -15,7 +15,7 @@ export type RangeProps = {
 export const Range = ({ updateData, app, testId }: RangeProps) => {
   const rangeRef = React.useRef<HTMLInputElement>(null);
   const valueRef = React.useRef<HTMLDivElement>(null);
-  const selectedElements = app.scene.getSelectedElements(app.state);
+  const selectedElements = app.scene.getSelectedElements(app.pendingState);
   let hasCommonOpacity = true;
   const firstElement = selectedElements.at(0);
   const leastCommonOpacity = selectedElements.reduce((acc, element) => {
@@ -28,7 +28,7 @@ export const Range = ({ updateData, app, testId }: RangeProps) => {
     return acc;
   }, firstElement?.opacity ?? null);
 
-  const value = leastCommonOpacity ?? app.state.currentItemOpacity;
+  const value = leastCommonOpacity ?? app.pendingState.currentItemOpacity;
 
   useEffect(() => {
     if (rangeRef.current && valueRef.current) {

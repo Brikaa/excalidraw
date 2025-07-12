@@ -48,7 +48,6 @@ import { GlobalTestState, createEvent, fireEvent, act } from "../test-utils";
 
 import type { Action } from "../../actions/types";
 import type App from "../../components/App";
-import type { AppState } from "../../types";
 
 
 const readFile = util.promisify(fs.readFile);
@@ -63,7 +62,7 @@ export class API {
       h.app.updateScene(...args);
     });
   };
-  static setAppState: React.Component<any, AppState>["setState"] = (
+  static setAppState: App["setState"] = (
     state,
     cb,
   ) => {
@@ -513,7 +512,7 @@ export class API {
     Object.defineProperty(fileDropEvent, "clientY", {
       value: 0,
     });
-    
+
     await fireEvent(GlobalTestState.interactiveCanvas, fileDropEvent);
   };
 

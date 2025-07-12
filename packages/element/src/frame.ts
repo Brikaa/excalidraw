@@ -626,7 +626,7 @@ export const replaceAllElementsInFrame = <T extends ExcalidrawElement>(
     removeAllElementsFromFrame(allElements, frame),
     nextElementsInFrame,
     frame,
-    app.state,
+    app.pendingState,
   ).slice();
 };
 

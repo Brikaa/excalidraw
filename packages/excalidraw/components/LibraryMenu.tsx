@@ -207,8 +207,8 @@ const usePendingElementsMemo = (
       // Only update once pointer is released.
       // Reading directly from app.state to make it clear it's not reactive
       // (hence, there's potential for stale state)
-      app.state.cursorButton === "up" &&
-      app.state.activeTool.type === "selection"
+      app.pendingState.cursorButton === "up" &&
+      app.pendingState.activeTool.type === "selection"
     ) {
       setState((prev) => {
         // if selectedElementIds changed, we don't have to compare versions
@@ -243,8 +243,8 @@ const usePendingElementsMemo = (
     }
   }, [
     app,
-    app.state.cursorButton,
-    app.state.activeTool.type,
+    app.pendingState.cursorButton,
+    app.pendingState.activeTool.type,
     appState.selectedElementIds,
     elements,
   ]);

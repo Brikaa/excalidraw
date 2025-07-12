@@ -194,7 +194,7 @@ export const SearchMenu = () => {
       const match = searchMatches.items[focusIndex];
 
       if (match) {
-        const zoomValue = app.state.zoom.value;
+        const zoomValue = app.pendingState.zoom.value;
 
         const matchAsElement = newTextElement({
           text: match.searchQuery,
@@ -222,11 +222,11 @@ export const SearchMenu = () => {
             app.canvas.width / window.devicePixelRatio,
             app.canvas.height / window.devicePixelRatio,
             {
-              offsetLeft: app.state.offsetLeft,
-              offsetTop: app.state.offsetTop,
-              scrollX: app.state.scrollX,
-              scrollY: app.state.scrollY,
-              zoom: app.state.zoom,
+              offsetLeft: app.pendingState.offsetLeft,
+              offsetTop: app.pendingState.offsetTop,
+              scrollX: app.pendingState.scrollX,
+              scrollY: app.pendingState.scrollY,
+              zoom: app.pendingState.zoom,
             },
             app.scene.getNonDeletedElementsMap(),
             app.getEditorUIOffsets(),
@@ -282,8 +282,8 @@ export const SearchMenu = () => {
     const eventHandler = (event: KeyboardEvent) => {
       if (
         event.key === KEYS.ESCAPE &&
-        !app.state.openDialog &&
-        !app.state.openPopup
+        !app.pendingState.openDialog &&
+        !app.pendingState.openPopup
       ) {
         event.preventDefault();
         event.stopPropagation();
@@ -297,12 +297,12 @@ export const SearchMenu = () => {
         event.preventDefault();
         event.stopPropagation();
 
-        if (app.state.openDialog) {
+        if (app.pendingState.openDialog) {
           return;
         }
 
         if (!searchInputRef.current?.matches(":focus")) {
-          if (app.state.openDialog) {
+          if (app.pendingState.openDialog) {
             setAppState({
               openDialog: null,
             });
@@ -843,7 +843,7 @@ const handleSearch = debounce(
           frame,
           searchQuery,
           match.index,
-          app.state.zoom.value,
+          app.pendingState.zoom.value,
         );
 
         if (matchedLines.length > 0) {

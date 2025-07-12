@@ -498,11 +498,11 @@ const ExcalidrawAppStateContext = React.createContext<AppState>({
 });
 ExcalidrawAppStateContext.displayName = "ExcalidrawAppStateContext";
 
-const ExcalidrawSetAppStateContext = React.createContext<
-  React.Component<any, AppState>["setState"]
->(() => {
-  console.warn("Uninitialized ExcalidrawSetAppStateContext context!");
-});
+const ExcalidrawSetAppStateContext = React.createContext<App["setState"]>(
+  () => {
+    console.warn("Uninitialized ExcalidrawSetAppStateContext context!");
+  },
+);
 ExcalidrawSetAppStateContext.displayName = "ExcalidrawSetAppStateContext";
 
 const ExcalidrawActionManagerContext = React.createContext<ActionManager>(
@@ -11235,7 +11235,7 @@ declare global {
       scene: Scene;
       elements: readonly ExcalidrawElement[];
       state: AppState;
-      setState: React.Component<any, AppState>["setState"];
+      setState: App["setState"];
       app: InstanceType<typeof App>;
       history: History;
       store: Store;

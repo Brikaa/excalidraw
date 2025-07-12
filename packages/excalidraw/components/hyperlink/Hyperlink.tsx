@@ -50,6 +50,7 @@ import { getLinkHandleFromCoords } from "./helpers";
 
 import "./Hyperlink.scss";
 
+import type App from "../App";
 import type { AppState, ExcalidrawProps, UIAppState } from "../../types";
 
 const POPUP_WIDTH = 380;
@@ -75,7 +76,7 @@ export const Hyperlink = ({
 }: {
   element: NonDeletedExcalidrawElement;
   scene: Scene;
-  setAppState: React.Component<any, AppState>["setState"];
+  setAppState: App["setState"];
   onLinkOpen: ExcalidrawProps["onLinkOpen"];
   setToast: (
     toast: { message: string; closable?: boolean; duration?: number } | null,

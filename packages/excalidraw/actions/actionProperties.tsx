@@ -173,7 +173,7 @@ export const getFormValue = function <T extends Primitive>(
   isRelevantElement: true | ((element: ExcalidrawElement) => boolean),
   defaultValue: T | ((isSomeElementSelected: boolean) => T),
 ): T {
-  const editingTextElement = app.state.editingTextElement;
+  const editingTextElement = app.pendingState.editingTextElement;
   const nonDeletedElements = getNonDeletedElements(elements);
 
   let ret: T | null = null;
@@ -183,10 +183,10 @@ export const getFormValue = function <T extends Primitive>(
   }
 
   if (!ret) {
-    const hasSelection = isSomeElementSelected(nonDeletedElements, app.state);
+    const hasSelection = isSomeElementSelected(nonDeletedElements, app.pendingState);
 
     if (hasSelection) {
-      const selectedElements = app.scene.getSelectedElements(app.state);
+      const selectedElements = app.scene.getSelectedElements(app.pendingState);
       const targetElements =
         isRelevantElement === true
           ? selectedElements

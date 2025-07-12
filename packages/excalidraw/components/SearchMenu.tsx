@@ -165,29 +165,27 @@ export const SearchMenu = () => {
   };
 
   useEffect(() => {
-    setAppState((state) => {
-      if (!state.searchMatches) {
-        return null;
-      }
-
+    if (app.pendingState.searchMatches) {
       const focusedId =
         focusIndex !== null
-          ? state.searchMatches?.matches[focusIndex]?.id || null
+          ? app.pendingState.searchMatches?.matches[focusIndex]?.id || null
           : null;
 
-      return {
+      setAppState({
         searchMatches: {
           focusedId,
-          matches: state.searchMatches.matches.map((match, index) => {
-            if (index === focusIndex) {
-              return { ...match, focus: true };
-            }
-            return { ...match, focus: false };
-          }),
+          matches: app.pendingState.searchMatches.matches.map(
+            (match, index) => {
+              if (index === focusIndex) {
+                return { ...match, focus: true };
+              }
+              return { ...match, focus: false };
+            },
+          ),
         },
-      };
-    });
-  }, [focusIndex, setAppState]);
+      });
+    }
+  }, [app.pendingState.searchMatches, focusIndex, setAppState]);
 
   useEffect(() => {
     if (searchMatches.items.length > 0 && focusIndex !== null) {

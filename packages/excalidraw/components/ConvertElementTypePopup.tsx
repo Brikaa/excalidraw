@@ -229,9 +229,11 @@ const Panel = ({
       a.id.localeCompare(b.id),
     );
     const newPositionRef = `
-      ${app.pendingState.scrollX}${app.pendingState.scrollY}${app.pendingState.offsetTop}${
-      app.pendingState.offsetLeft
-    }${app.pendingState.zoom.value}${elements.map((el) => el.id).join(",")}`;
+      ${app.pendingState.scrollX}${app.pendingState.scrollY}${
+      app.pendingState.offsetTop
+    }${app.pendingState.offsetLeft}${app.pendingState.zoom.value}${elements
+      .map((el) => el.id)
+      .join(",")}`;
 
     if (newPositionRef === positionRef.current) {
       return;
@@ -319,7 +321,9 @@ const Panel = ({
           (GAP_VERTICAL + 8) * app.pendingState.zoom.value -
           app.pendingState.offsetTop
         }px`,
-        left: `${panelPosition.x - app.pendingState.offsetLeft - GAP_HORIZONTAL}px`,
+        left: `${
+          panelPosition.x - app.pendingState.offsetLeft - GAP_HORIZONTAL
+        }px`,
         zIndex: 2,
       }}
       className={CLASSES.CONVERT_ELEMENT_TYPE_POPUP}
@@ -495,13 +499,11 @@ export const convertElementTypes = (
         }
       }
 
-      app.setState((prevState) => {
-        return {
-          selectedElementIds,
-          activeTool: updateActiveTool(prevState, {
-            type: "selection",
-          }),
-        };
+      app.setState({
+        selectedElementIds,
+        activeTool: updateActiveTool(app.pendingState, {
+          type: "selection",
+        }),
       });
     }
   }
@@ -611,7 +613,7 @@ export const convertElementTypes = (
       app.scene.getSelectedElements(app.pendingState),
     );
 
-    app.setState((prevState) => ({
+    app.setState({
       selectedElementIds,
       selectedLinearElement:
         convertedSelectedLinearElements.length === 1
@@ -620,10 +622,10 @@ export const convertElementTypes = (
               app.scene.getNonDeletedElementsMap(),
             )
           : null,
-      activeTool: updateActiveTool(prevState, {
+      activeTool: updateActiveTool(app.pendingState, {
         type: "selection",
       }),
-    }));
+    });
   }
 
   return true;

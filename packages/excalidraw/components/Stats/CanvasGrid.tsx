@@ -35,31 +35,28 @@ const CanvasGrid = ({
         shouldChangeByStepSize,
         setInputValue,
       }) => {
-        setAppState((state) => {
-          let nextGridStep;
+        let nextGridStep;
 
-          if (nextValue) {
-            nextGridStep = nextValue;
-          } else if (instantChange) {
-            nextGridStep = shouldChangeByStepSize
-              ? getStepSizedValue(
-                  state.gridStep + STEP_SIZE * Math.sign(instantChange),
-                  STEP_SIZE,
-                )
-              : state.gridStep + instantChange;
-          }
+        if (nextValue) {
+          nextGridStep = nextValue;
+        } else if (instantChange) {
+          nextGridStep = shouldChangeByStepSize
+            ? getStepSizedValue(
+                appState.gridStep + STEP_SIZE * Math.sign(instantChange),
+                STEP_SIZE,
+              )
+            : appState.gridStep + instantChange;
+        }
 
-          if (!nextGridStep) {
-            setInputValue(state.gridStep);
-            return null;
-          }
-
+        if (!nextGridStep) {
+          setInputValue(appState.gridStep);
+        } else {
           nextGridStep = getNormalizedGridStep(nextGridStep);
           setInputValue(nextGridStep);
-          return {
+          setAppState({
             gridStep: nextGridStep,
-          };
-        });
+          });
+        }
       }}
       scene={scene}
       value={appState.gridStep}

@@ -34,6 +34,7 @@ import {
   useApp,
   useAppProps,
   useExcalidrawActionManager,
+  useExcalidrawAppState,
   useExcalidrawSetAppState,
 } from "../App";
 import { Dialog } from "../Dialog";
@@ -140,6 +141,7 @@ type CommandPaletteProps = {
 export const CommandPalette = Object.assign(
   (props: CommandPaletteProps) => {
     const uiAppState = useUIAppState();
+    const appState = useExcalidrawAppState();
     const setAppState = useExcalidrawSetAppState();
 
     useEffect(() => {
@@ -147,19 +149,15 @@ export const CommandPalette = Object.assign(
         if (isCommandPaletteToggleShortcut(event)) {
           event.preventDefault();
           event.stopPropagation();
-          setAppState((appState) => {
-            const nextState =
-              appState.openDialog?.name === "commandPalette"
-                ? null
-                : ({ name: "commandPalette" } as const);
-
-            if (nextState) {
-              trackEvent("command_palette", "open", "shortcut");
-            }
-
-            return {
-              openDialog: nextState,
-            };
+          const nextState =
+            appState.openDialog?.name === "commandPalette"
+              ? null
+              : ({ name: "commandPalette" } as const);
+          if (nextState) {
+            trackEvent("command_palette", "open", "shortcut");
+          }
+          setAppState({
+            openDialog: nextState,
           });
         }
       };
@@ -170,7 +168,7 @@ export const CommandPalette = Object.assign(
         window.removeEventListener(EVENT.KEYDOWN, commandPaletteShortcut, {
           capture: true,
         });
-    }, [setAppState]);
+    }, [appState.openDialog?.name, setAppState]);
 
     if (uiAppState.openDialog?.name !== "commandPalette") {
       return null;
@@ -435,10 +433,10 @@ function CommandPaletteInner({
             );
           },
           perform: () => {
-            setAppState((prevState) => ({
-              openMenu: prevState.openMenu === "shape" ? null : "shape",
+            setAppState({
+              openMenu: app.pendingState.openMenu === "shape" ? null : "shape",
               openPopup: "elementStroke",
-            }));
+            });
           },
         },
         {
@@ -455,10 +453,10 @@ function CommandPaletteInner({
             );
           },
           perform: () => {
-            setAppState((prevState) => ({
-              openMenu: prevState.openMenu === "shape" ? null : "shape",
+            setAppState({
+              openMenu: app.pendingState.openMenu === "shape" ? null : "shape",
               openPopup: "elementBackground",
-            }));
+            });
           },
         },
         {
@@ -468,10 +466,11 @@ function CommandPaletteInner({
           category: DEFAULT_CATEGORIES.editor,
           viewMode: false,
           perform: () => {
-            setAppState((prevState) => ({
-              openMenu: prevState.openMenu === "canvas" ? null : "canvas",
+            setAppState({
+              openMenu:
+                app.pendingState.openMenu === "canvas" ? null : "canvas",
               openPopup: "canvasBackground",
-            }));
+            });
           },
         },
         ...SHAPES.reduce((acc: CommandPaletteItem[], shape) => {
@@ -532,13 +531,13 @@ function CommandPaletteInner({
           viewMode: false,
           predicate: appProps.aiEnabled,
           perform: () => {
-            setAppState((state) => ({
-              ...state,
+            setAppState({
+              ...app.pendingState,
               openDialog: {
                 name: "ttd",
                 tab: "text-to-diagram",
               },
-            }));
+            });
           },
         },
         {
@@ -548,13 +547,13 @@ function CommandPaletteInner({
           viewMode: false,
           predicate: appProps.aiEnabled,
           perform: () => {
-            setAppState((state) => ({
-              ...state,
+            setAppState({
+              ...app.pendingState,
               openDialog: {
                 name: "ttd",
                 tab: "mermaid",
               },
-            }));
+            });
           },
         },
         // {

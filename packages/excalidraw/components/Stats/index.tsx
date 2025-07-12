@@ -196,13 +196,12 @@ export const StatsInner = memo(
             label={<h3>{t("stats.generalStats")}</h3>}
             open={!!(appState.stats.panels & STATS_PANELS.generalStats)}
             openTrigger={() =>
-              setAppState((state) => {
-                return {
-                  stats: {
-                    open: true,
-                    panels: state.stats.panels ^ STATS_PANELS.generalStats,
-                  },
-                };
+              setAppState({
+                stats: {
+                  open: true,
+                  panels:
+                    app.pendingState.stats.panels ^ STATS_PANELS.generalStats,
+                },
               })
             }
           >
@@ -251,14 +250,13 @@ export const StatsInner = memo(
                   !!(appState.stats.panels & STATS_PANELS.elementProperties)
                 }
                 openTrigger={() =>
-                  setAppState((state) => {
-                    return {
-                      stats: {
-                        open: true,
-                        panels:
-                          state.stats.panels ^ STATS_PANELS.elementProperties,
-                      },
-                    };
+                  setAppState({
+                    stats: {
+                      open: true,
+                      panels:
+                        app.pendingState.stats.panels ^
+                        STATS_PANELS.elementProperties,
+                    },
                   })
                 }
               >

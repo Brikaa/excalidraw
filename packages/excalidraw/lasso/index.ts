@@ -90,76 +90,74 @@ export class LassoTrail extends AnimatedTrail {
   }
 
   selectElementsFromIds = (ids: string[]) => {
-    this.app.setState((prevState) => {
-      const nextSelectedElementIds = ids.reduce((acc, id) => {
-        acc[id] = true;
-        return acc;
-      }, {} as Record<ExcalidrawElement["id"], true>);
+    const nextSelectedElementIds = ids.reduce((acc, id) => {
+      acc[id] = true;
+      return acc;
+    }, {} as Record<ExcalidrawElement["id"], true>);
 
-      if (this.keepPreviousSelection) {
-        for (const id of Object.keys(prevState.selectedElementIds)) {
-          nextSelectedElementIds[id] = true;
+    if (this.keepPreviousSelection) {
+      for (const id of Object.keys(this.app.pendingState.selectedElementIds)) {
+        nextSelectedElementIds[id] = true;
+      }
+    }
+
+    for (const [id] of Object.entries(nextSelectedElementIds)) {
+      const element = this.app.scene.getNonDeletedElement(id);
+
+      if (element && isTextElement(element)) {
+        const container = getContainerElement(
+          element,
+          this.app.scene.getNonDeletedElementsMap(),
+        );
+        if (container) {
+          nextSelectedElementIds[container.id] = true;
+          delete nextSelectedElementIds[element.id];
         }
       }
+    }
 
-      for (const [id] of Object.entries(nextSelectedElementIds)) {
-        const element = this.app.scene.getNonDeletedElement(id);
+    // remove all children of selected frames
+    for (const [id] of Object.entries(nextSelectedElementIds)) {
+      const element = this.app.scene.getNonDeletedElement(id);
 
-        if (element && isTextElement(element)) {
-          const container = getContainerElement(
-            element,
-            this.app.scene.getNonDeletedElementsMap(),
-          );
-          if (container) {
-            nextSelectedElementIds[container.id] = true;
-            delete nextSelectedElementIds[element.id];
-          }
+      if (element && isFrameLikeElement(element)) {
+        const elementsInFrame = getFrameChildren(
+          this.app.scene.getNonDeletedElementsMap(),
+          element.id,
+        );
+        for (const child of elementsInFrame) {
+          delete nextSelectedElementIds[child.id];
         }
       }
+    }
 
-      // remove all children of selected frames
-      for (const [id] of Object.entries(nextSelectedElementIds)) {
-        const element = this.app.scene.getNonDeletedElement(id);
+    const nextSelection = selectGroupsForSelectedElements(
+      {
+        editingGroupId: this.app.pendingState.editingGroupId,
+        selectedElementIds: nextSelectedElementIds,
+      },
+      this.app.scene.getNonDeletedElements(),
+      this.app.pendingState,
+      this.app,
+    );
 
-        if (element && isFrameLikeElement(element)) {
-          const elementsInFrame = getFrameChildren(
-            this.app.scene.getNonDeletedElementsMap(),
-            element.id,
-          );
-          for (const child of elementsInFrame) {
-            delete nextSelectedElementIds[child.id];
-          }
-        }
-      }
+    const selectedIds = [...Object.keys(nextSelection.selectedElementIds)];
+    const selectedGroupIds = [...Object.keys(nextSelection.selectedGroupIds)];
 
-      const nextSelection = selectGroupsForSelectedElements(
-        {
-          editingGroupId: prevState.editingGroupId,
-          selectedElementIds: nextSelectedElementIds,
-        },
-        this.app.scene.getNonDeletedElements(),
-        prevState,
-        this.app,
-      );
-
-      const selectedIds = [...Object.keys(nextSelection.selectedElementIds)];
-      const selectedGroupIds = [...Object.keys(nextSelection.selectedGroupIds)];
-
-      return {
-        selectedElementIds: nextSelection.selectedElementIds,
-        selectedGroupIds: nextSelection.selectedGroupIds,
-        selectedLinearElement:
-          selectedIds.length === 1 &&
-          !selectedGroupIds.length &&
-          isLinearElement(this.app.scene.getNonDeletedElement(selectedIds[0]))
-            ? new LinearElementEditor(
-                this.app.scene.getNonDeletedElement(
-                  selectedIds[0],
-                ) as NonDeleted<ExcalidrawLinearElement>,
-                this.app.scene.getNonDeletedElementsMap(),
-              )
-            : null,
-      };
+    this.app.setState({
+      selectedElementIds: nextSelection.selectedElementIds,
+      selectedGroupIds: nextSelection.selectedGroupIds,
+      selectedLinearElement:
+        selectedIds.length === 1 &&
+        !selectedGroupIds.length &&
+        isLinearElement(this.app.scene.getNonDeletedElement(selectedIds[0]))
+          ? new LinearElementEditor(
+              this.app.scene.getNonDeletedElement(
+                selectedIds[0],
+              ) as NonDeleted<ExcalidrawLinearElement>,
+              this.app.scene.getNonDeletedElementsMap(),
+            )
+          : null,
     });
   };
 

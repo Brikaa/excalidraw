@@ -1,7 +1,7 @@
 import * as RadixTabs from "@radix-ui/react-tabs";
 
 import { useUIAppState } from "../../context/ui-appState";
-import { useExcalidrawSetAppState } from "../App";
+import { useExcalidrawAppState, useExcalidrawSetAppState } from "../App";
 
 export const SidebarTabs = ({
   children,
@@ -9,24 +9,24 @@ export const SidebarTabs = ({
 }: {
   children: React.ReactNode;
 } & Omit<React.RefAttributes<HTMLDivElement>, "onSelect">) => {
-  const appState = useUIAppState();
+  const uiAppState = useUIAppState();
+  const appState = useExcalidrawAppState();
   const setAppState = useExcalidrawSetAppState();
 
-  if (!appState.openSidebar) {
+  if (!uiAppState.openSidebar) {
     return null;
   }
 
-  const { name } = appState.openSidebar;
+  const { name } = uiAppState.openSidebar;
 
   return (
     <RadixTabs.Root
       className="sidebar-tabs-root"
-      value={appState.openSidebar.tab}
+      value={uiAppState.openSidebar.tab}
       onValueChange={(tab) =>
-        setAppState((state) => ({
-          ...state,
-          openSidebar: { ...state.openSidebar, name, tab },
-        }))
+        setAppState({
+          openSidebar: { ...appState.openSidebar, name, tab },
+        })
       }
       {...rest}
     >

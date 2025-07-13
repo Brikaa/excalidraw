@@ -494,7 +494,6 @@ const ExcalidrawWrapper = () => {
 
     const loadFileHandle = () => {
       FileHandleIDB.load().then((fileHandle) => {
-        console.log({ fileHandle });
         excalidrawAPI.updateScene({ appState: { fileHandle } });
       });
     };
@@ -849,6 +848,9 @@ const ExcalidrawWrapper = () => {
     >
       <Excalidraw
         excalidrawAPI={excalidrawRefCallback}
+        onIncrement={(event) => {
+          console.log(event.type, event.change.elements);
+        }}
         onChange={onChange}
         initialData={initialStatePromiseRef.current.promise}
         isCollaborating={isCollaborating}

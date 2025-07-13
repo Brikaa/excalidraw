@@ -160,12 +160,6 @@ export const actionSaveToActiveFile = register({
     const fileHandleExists = !!appState.fileHandle;
 
     try {
-      if (fileHandleExists) {
-        await appState.fileHandle.requestPermission({
-          mode: "readwrite",
-        });
-      }
-
       const { fileHandle } = isImageFileHandle(appState.fileHandle)
         ? await resaveAsImageWithScene(
             elements,

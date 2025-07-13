@@ -168,7 +168,7 @@ export const CommandPalette = Object.assign(
         window.removeEventListener(EVENT.KEYDOWN, commandPaletteShortcut, {
           capture: true,
         });
-    }, [appState.openDialog?.name, setAppState]);
+    }, [appState, setAppState]);
 
     if (uiAppState.openDialog?.name !== "commandPalette") {
       return null;

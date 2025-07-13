@@ -185,7 +185,7 @@ export const SearchMenu = () => {
         },
       });
     }
-  }, [app.pendingState.searchMatches, focusIndex, setAppState]);
+  }, [app, focusIndex, setAppState]);
 
   useEffect(() => {
     if (searchMatches.items.length > 0 && focusIndex !== null) {

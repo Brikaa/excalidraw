@@ -74,6 +74,20 @@
     z-index: 6;
     white-space: pre;
   }
+
+  .auto-save-indicator {
+    position: absolute;
+    z-index: 6;
+    background-color: var(--color-warning-dark);
+    padding: 8px;
+    top: 13px;
+    right: 175px;
+    cursor: pointer;
+    svg {
+      width: 30px;
+      height: 30px;
+    }
+  }
 }
 
 .excalidraw-app.is-collaborating {

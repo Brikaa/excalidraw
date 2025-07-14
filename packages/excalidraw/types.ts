@@ -730,6 +730,7 @@ export type AppClassProperties = {
   lastViewportPosition: App["lastViewportPosition"];
   scrollToContent: App["scrollToContent"];
   addFiles: App["addFiles"];
+  saveToFile: App["saveToFile"];
   addElementsFromPasteOrLibrary: App["addElementsFromPasteOrLibrary"];
   togglePenMode: App["togglePenMode"];
   toggleLock: App["toggleLock"];
@@ -843,6 +844,7 @@ export interface ExcalidrawImperativeAPI {
   registerAction: (action: Action) => void;
   refresh: InstanceType<typeof App>["refresh"];
   setToast: InstanceType<typeof App>["setToast"];
+  saveToFile: InstanceType<typeof App>["saveToFile"];
   addFiles: (data: BinaryFileData[]) => void;
   id: string;
   setActiveTool: InstanceType<typeof App>["setActiveTool"];

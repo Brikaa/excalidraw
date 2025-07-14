@@ -18,10 +18,8 @@ import { ProjectName } from "../components/ProjectName";
 import { ToolButton } from "../components/ToolButton";
 import { Tooltip } from "../components/Tooltip";
 import { ExportIcon, questionCircle, saveAs } from "../components/icons";
-import { loadFromJSON, saveAsJSON } from "../data";
-import { isImageFileHandle } from "../data/blob";
+import { loadFromJSON } from "../data";
 import { nativeFileSystemSupported } from "../data/filesystem";
-import { resaveAsImageWithScene } from "../data/resave";
 
 import { t } from "../i18n";
 import { getSelectedElements, isSomeElementSelected } from "../scene";
@@ -156,20 +154,11 @@ export const actionSaveToActiveFile = register({
       !appState.viewModeEnabled
     );
   },
-  perform: async (elements, appState, value, app) => {
+  perform: async (_, appState, __, app) => {
     const fileHandleExists = !!appState.fileHandle;
 
     try {
-      const { fileHandle } = isImageFileHandle(appState.fileHandle)
-        ? await resaveAsImageWithScene(
-            elements,
-            appState,
-            app.files,
-            app.getName(),
-          )
-        : await saveAsJSON(elements, appState, app.files, app.getName());
-
-      app.onSaveEmitter.trigger();
+      const fileHandle = await app.saveToFile();
       return {
         captureUpdate: CaptureUpdateAction.EVENTUALLY,
         appState: {
@@ -206,18 +195,9 @@ export const actionSaveFileToDisk = register({
   icon: ExportIcon,
   viewMode: true,
   trackEvent: { category: "export" },
-  perform: async (elements, appState, value, app) => {
+  perform: async (_, appState, __, app) => {
     try {
-      const { fileHandle } = await saveAsJSON(
-        elements,
-        {
-          ...appState,
-          fileHandle: null,
-        },
-        app.files,
-        app.getName(),
-      );
-      app.onSaveEmitter.trigger();
+      const fileHandle = await app.saveToFile();
       return {
         captureUpdate: CaptureUpdateAction.EVENTUALLY,
         appState: {

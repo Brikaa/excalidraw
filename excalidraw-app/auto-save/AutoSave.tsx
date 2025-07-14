@@ -1,7 +1,6 @@
 import { memo, useEffect, useRef } from "react";
 import { FileHandleIDB } from "excalidraw-app/data/LocalData";
 import { debounce } from "@excalidraw/common";
-import { saveAsJSON } from "@excalidraw/excalidraw/data";
 
 import type { FileSystemHandle } from "@excalidraw/excalidraw/data/filesystem";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
@@ -17,12 +16,16 @@ const save = debounce(
     if (permission !== "granted") {
       console.log("Need to show indicator");
     } else {
-      await saveAsJSON(
-        excalidrawAPI.getSceneElements(),
-        excalidrawAPI.getAppState(),
-        excalidrawAPI.getFiles(),
-        excalidrawAPI.getName(),
-      );
+      try {
+        await excalidrawAPI.saveToFile();
+        console.log("Saved");
+      } catch (error: any) {
+        if (error?.name !== "AbortError") {
+          console.error(error);
+        } else {
+          console.warn(error);
+        }
+      }
     }
   },
   AUTO_SAVE_PERIOD,
@@ -39,9 +42,9 @@ export const AutoSave = memo((props: AutoSaveProps) => {
   useEffect(() => {
     const unsubOnChange = excalidrawAPI.onChange(async (_, appState) => {
       if (appState.fileHandle !== fileHandle.current && !appState.isLoading) {
-        const res = await FileHandleIDB.save(appState.fileHandle);
+        await FileHandleIDB.save(appState.fileHandle);
         fileHandle.current = appState.fileHandle;
-        console.log("Saved", res);
+        console.log("Changed file handle");
       }
     });
 

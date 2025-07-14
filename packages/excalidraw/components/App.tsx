@@ -234,6 +234,8 @@ import {
   isSimpleArrow,
 } from "@excalidraw/element";
 
+import { resaveAsImageWithScene } from "@excalidraw/excalidraw/data/resave";
+
 import type { LocalPoint, Radians } from "@excalidraw/math";
 
 import type {
@@ -318,7 +320,7 @@ import {
   isHandToolActive,
 } from "../appState";
 import { copyTextToSystemClipboard, parseClipboard } from "../clipboard";
-import { exportCanvas, loadFromBlob } from "../data";
+import { exportCanvas, loadFromBlob, saveAsJSON } from "../data";
 import Library, { distributeLibraryItemsOnSquareGrid } from "../data/library";
 import { restore, restoreElements } from "../data/restore";
 import { getCenter, getDistance } from "../gesture";
@@ -729,6 +731,7 @@ class App extends React.Component<AppProps, AppState> {
         },
         refresh: this.refresh,
         setToast: this.setToast,
+        saveToFile: this.saveToFile,
         id: this.id,
         setActiveTool: this.setActiveTool,
         setCursor: this.setCursor,
@@ -3852,6 +3855,24 @@ class App extends React.Component<AppProps, AppState> {
     } catch (error: any) {
       this.setState({ errorMessage: error.message });
     }
+  };
+
+  saveToFile = async () => {
+    const { fileHandle } = isImageFileHandle(this.state.fileHandle)
+      ? await resaveAsImageWithScene(
+          this.scene.getElementsIncludingDeleted(),
+          this.state,
+          this.files,
+          this.getName(),
+        )
+      : await saveAsJSON(
+          this.scene.getElementsIncludingDeleted(),
+          this.state,
+          this.files,
+          this.getName(),
+        );
+    this.onSaveEmitter.trigger();
+    return fileHandle;
   };
 
   /**

@@ -14,6 +14,7 @@ import {
   getFontString,
   isRTL,
   getVerticalOffset,
+  getFreeDrawOptions,
 } from "@excalidraw/common";
 
 import type {
@@ -70,7 +71,6 @@ import type {
   ElementsMap,
 } from "./types";
 
-import type { StrokeOptions } from "perfect-freehand";
 import type { RoughCanvas } from "roughjs/bin/canvas";
 
 // using a stronger invert (100% vs our regular 93%) and saturate
@@ -1041,18 +1041,9 @@ export function getFreeDrawSvgPath(element: ExcalidrawFreeDrawElement) {
     ? element.points.map(([x, y], i) => [x, y, element.pressures[i]])
     : [[0, 0, 0.5]];
 
-  // Consider changing the options for simulated pressure vs real pressure
-  const options: StrokeOptions = {
-    simulatePressure: element.simulatePressure,
-    size: element.strokeWidth * 4.25,
-    thinning: 0.6,
-    smoothing: 0.5,
-    streamline: 0.5,
-    easing: (t) => Math.sin((t * Math.PI) / 2), // https://easings.net/#easeOutSine
-    last: !!element.lastCommittedPoint, // LastCommittedPoint is added on pointerup
-  };
-
-  return getSvgPathFromStroke(getStroke(inputPoints as number[][], options));
+  return getSvgPathFromStroke(
+    getStroke(inputPoints as number[][], getFreeDrawOptions(element)),
+  );
 }
 
 function med(A: number[], B: number[]) {

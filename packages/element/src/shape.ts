@@ -1,4 +1,5 @@
 import { simplify } from "points-on-curve";
+import { getStroke } from "perfect-freehand";
 
 import {
   type GeometricShape,
@@ -21,6 +22,7 @@ import {
   assertNever,
   COLOR_PALETTE,
   LINE_POLYGON_POINT_MERGE_DISTANCE,
+  getFreeDrawOptions,
 } from "@excalidraw/common";
 
 import { RoughGenerator } from "roughjs/bin/generator";
@@ -532,15 +534,18 @@ export const generateLinearCollisionShape = (
         return [];
       }
 
-      const simplifiedPoints = simplify(
-        element.points as Mutable<LocalPoint[]>,
-        0.75,
-      );
-
       return generator
-        .curve(simplifiedPoints as [number, number][], options)
-        .sets[0].ops.slice(0, element.points.length)
-        .map((op, i) => {
+        .curve(
+          simplify(
+            getStroke(
+              element.points as LocalPoint[],
+              getFreeDrawOptions(element),
+            ) as LocalPoint[],
+            0.75,
+          ),
+          options,
+        )
+        .sets[0].ops.map((op, i) => {
           if (i === 0) {
             const p = pointRotateRads<GlobalPoint>(
               pointFrom<GlobalPoint>(

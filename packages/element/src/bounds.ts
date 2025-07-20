@@ -1,7 +1,9 @@
 import rough from "roughjs/bin/rough";
+import { getStroke } from "perfect-freehand";
 
 import {
   arrayToMap,
+  getFreeDrawOptions,
   invariant,
   rescalePoints,
   sizeOf,
@@ -167,8 +169,12 @@ export class ElementBounds {
       elementsMap,
     );
     if (isFreeDrawElement(element)) {
+      const points = getStroke(
+        element.points as Mutable<LocalPoint[]>,
+        getFreeDrawOptions(element),
+      );
       const [minX, minY, maxX, maxY] = getBoundsFromPoints(
-        element.points.map(([x, y]) =>
+        points.map(([x, y]) =>
           pointRotateRads(
             pointFrom(x, y),
             pointFrom(cx - element.x, cy - element.y),
@@ -686,7 +692,11 @@ export const getBoundsFromPoints = (
 const getFreeDrawElementAbsoluteCoords = (
   element: ExcalidrawFreeDrawElement,
 ): [number, number, number, number, number, number] => {
-  const [minX, minY, maxX, maxY] = getBoundsFromPoints(element.points);
+  const points = getStroke(
+    element.points as Mutable<LocalPoint[]>,
+    getFreeDrawOptions(element),
+  ) as LocalPoint[];
+  const [minX, minY, maxX, maxY] = getBoundsFromPoints([...points]);
   const x1 = minX + element.x;
   const y1 = minY + element.y;
   const x2 = maxX + element.x;

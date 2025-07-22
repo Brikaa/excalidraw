@@ -1,5 +1,4 @@
 import rough from "roughjs/bin/rough";
-import { getStroke } from "perfect-freehand";
 
 import { isRightAngleRads } from "@excalidraw/math";
 
@@ -14,7 +13,7 @@ import {
   getFontString,
   isRTL,
   getVerticalOffset,
-  getFreeDrawOptions,
+  getFreeDrawStroke,
 } from "@excalidraw/common";
 
 import type {
@@ -1030,20 +1029,13 @@ export function generateFreeDrawShape(element: ExcalidrawFreeDrawElement) {
 }
 
 export function getFreeDrawPath2D(element: ExcalidrawFreeDrawElement) {
-  return pathsCache.get(element);
+  const path = pathsCache.get(element);
+  pathsCache.delete(element);
+  return path;
 }
 
 export function getFreeDrawSvgPath(element: ExcalidrawFreeDrawElement) {
-  // If input points are empty (should they ever be?) return a dot
-  const inputPoints = element.simulatePressure
-    ? element.points
-    : element.points.length
-    ? element.points.map(([x, y], i) => [x, y, element.pressures[i]])
-    : [[0, 0, 0.5]];
-
-  return getSvgPathFromStroke(
-    getStroke(inputPoints as number[][], getFreeDrawOptions(element)),
-  );
+  return getSvgPathFromStroke(getFreeDrawStroke(element));
 }
 
 function med(A: number[], B: number[]) {

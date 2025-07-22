@@ -1,5 +1,4 @@
 import { simplify } from "points-on-curve";
-import { getStroke } from "perfect-freehand";
 
 import {
   type GeometricShape,
@@ -22,7 +21,8 @@ import {
   assertNever,
   COLOR_PALETTE,
   LINE_POLYGON_POINT_MERGE_DISTANCE,
-  getFreeDrawOptions,
+  getFreeDrawStroke,
+  StrokeCache,
 } from "@excalidraw/common";
 
 import { RoughGenerator } from "roughjs/bin/generator";
@@ -46,6 +46,7 @@ import {
   canBecomePolygon,
   isElbowArrow,
   isEmbeddableElement,
+  isFreeDrawElement,
   isIframeElement,
   isIframeLikeElement,
   isLinearElement,
@@ -100,11 +101,16 @@ export class ShapeCache {
       : Drawable,
   ) => ShapeCache.cache.set(element, shape);
 
-  public static delete = (element: ExcalidrawElement) =>
+  public static delete = (element: ExcalidrawElement) => {
     ShapeCache.cache.delete(element);
+    if (isFreeDrawElement(element)) {
+      StrokeCache.cache.delete(element);
+    }
+  };
 
   public static destroy = () => {
     ShapeCache.cache = new WeakMap();
+    StrokeCache.cache = new WeakMap();
   };
 
   /**
@@ -534,17 +540,9 @@ export const generateLinearCollisionShape = (
         return [];
       }
 
+      const strokePoints = getFreeDrawStroke(element);
       return generator
-        .curve(
-          simplify(
-            getStroke(
-              element.points as LocalPoint[],
-              getFreeDrawOptions(element),
-            ) as LocalPoint[],
-            0.75,
-          ),
-          options,
-        )
+        .curve(simplify(strokePoints as LocalPoint[], 0.75), options)
         .sets[0].ops.map((op, i) => {
           if (i === 0) {
             const p = pointRotateRads<GlobalPoint>(

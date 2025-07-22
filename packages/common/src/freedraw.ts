@@ -1,6 +1,7 @@
-import type { ExcalidrawFreeDrawElement } from "@excalidraw/element/types";
+import { getStroke, type StrokeOptions } from "perfect-freehand";
 
-import type { StrokeOptions } from "perfect-freehand";
+import type { LocalPoint } from "@excalidraw/math";
+import type { ExcalidrawFreeDrawElement } from "@excalidraw/element/types";
 
 export const getFreeDrawOptions = (element: ExcalidrawFreeDrawElement) => {
   const options: StrokeOptions = {
@@ -13,4 +14,27 @@ export const getFreeDrawOptions = (element: ExcalidrawFreeDrawElement) => {
     last: !!element.lastCommittedPoint, // LastCommittedPoint is added on pointerup
   };
   return options;
+};
+
+export class StrokeCache {
+  public static cache = new WeakMap<ExcalidrawFreeDrawElement, LocalPoint[]>();
+}
+
+export const getFreeDrawStroke = (element: ExcalidrawFreeDrawElement) => {
+  const cachedStroke = StrokeCache.cache.get(element);
+  if (cachedStroke) {
+    return cachedStroke;
+  }
+
+  const inputPoints = element.simulatePressure
+    ? element.points
+    : element.points.length
+    ? element.points.map(([x, y], i) => [x, y, element.pressures[i]])
+    : [[0, 0, 0.5]];
+  const stroke = getStroke(
+    inputPoints as LocalPoint[],
+    getFreeDrawOptions(element),
+  ) as LocalPoint[];
+  StrokeCache.cache.set(element, stroke);
+  return stroke;
 };

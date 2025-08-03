@@ -29,7 +29,7 @@ type StaticCanvasProps = {
   renderConfig: StaticCanvasRenderConfig;
 };
 
-type RenderingProps = StaticCanvasProps & {
+type RenderingProps = {
   elementsMap: RenderableElementsMap;
   allElementsMap: NonDeletedSceneElementsMap;
   visibleElements: readonly NonDeletedExcalidrawElement[];
@@ -40,7 +40,7 @@ type RenderingProps = StaticCanvasProps & {
 
 const StaticCanvas = (props: StaticCanvasProps) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const prevProps = useRef<RenderingProps | null>(null);
+  const renderingProps = useRef<RenderingProps | null>(null);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -58,11 +58,8 @@ const StaticCanvas = (props: StaticCanvasProps) => {
     const unsub = excalidrawAPI.onRenderTrigger(
       (appState: AppState, scene: Scene) => {
         if (
-          prevProps.current &&
-          (appState.height !== prevProps.current.appState.height ||
-            appState.width !== prevProps.current.appState.width ||
-            props.canvas !== prevProps.current.canvas ||
-            props.scale !== prevProps.current.scale)
+          appState.height !== renderingProps.current?.appState.height ||
+          appState.width !== renderingProps.current?.appState.width
         ) {
           props.canvas.style.width = `${appState.width}px`;
           props.canvas.style.height = `${appState.height}px`;
@@ -84,41 +81,40 @@ const StaticCanvas = (props: StaticCanvasProps) => {
             newElementId: appState.newElement?.id,
           });
 
-        const currentProps = {
+        const nextRenderingProps = {
           allElementsMap: scene.getNonDeletedElementsMap(),
           visibleElements,
           appState,
-          canvas: props.canvas,
           elementsMap,
-          rc: props.rc,
-          renderConfig: props.renderConfig,
-          renderer: props.renderer,
-          scale: props.scale,
           sceneNonce: scene.getSceneNonce(),
           selectionNonce: appState.selectionElement?.versionNonce,
         };
 
-        if (!prevProps.current || areEqual(prevProps.current, currentProps)) {
+        if (
+          !renderingProps.current ||
+          areRenderingPropsEqual(renderingProps.current, nextRenderingProps)
+        ) {
           renderStaticScene(
             {
-              canvas: currentProps.canvas,
-              rc: currentProps.rc,
-              scale: currentProps.scale,
-              elementsMap: currentProps.elementsMap,
-              allElementsMap: currentProps.allElementsMap,
-              visibleElements: currentProps.visibleElements,
-              appState: currentProps.appState,
-              renderConfig: currentProps.renderConfig,
+              ...nextRenderingProps,
+              ...props,
             },
             isRenderThrottlingEnabled(),
           );
         }
 
-        prevProps.current = currentProps;
+        renderingProps.current = nextRenderingProps;
       },
     );
     return unsub;
-  }, [props.canvas, props.rc, props.renderConfig, props.renderer, props.scale]);
+  }, [
+    props,
+    props.canvas,
+    props.rc,
+    props.renderConfig,
+    props.renderer,
+    props.scale,
+  ]);
 
   return <div className="excalidraw__canvas-wrapper" ref={wrapperRef} />;
 };
@@ -153,10 +149,12 @@ const getRelevantAppStateProps = (appState: AppState): StaticCanvasAppState => {
   return relevantAppStateProps;
 };
 
-const areEqual = (prevProps: RenderingProps, nextProps: RenderingProps) => {
+const areRenderingPropsEqual = (
+  prevProps: RenderingProps,
+  nextProps: RenderingProps,
+) => {
   if (
     prevProps.sceneNonce !== nextProps.sceneNonce ||
-    prevProps.scale !== nextProps.scale ||
     // we need to memoize on elementsMap because they may have renewed
     // even if sceneNonce didn't change (e.g. we filter elements out based
     // on appState)
@@ -166,13 +164,11 @@ const areEqual = (prevProps: RenderingProps, nextProps: RenderingProps) => {
     return false;
   }
 
-  return (
-    isShallowEqual(
-      // asserting AppState because we're being passed the whole AppState
-      // but resolve to only the StaticCanvas-relevant props
-      getRelevantAppStateProps(prevProps.appState as AppState),
-      getRelevantAppStateProps(nextProps.appState as AppState),
-    ) && isShallowEqual(prevProps.renderConfig, nextProps.renderConfig)
+  return isShallowEqual(
+    // asserting AppState because we're being passed the whole AppState
+    // but resolve to only the StaticCanvas-relevant props
+    getRelevantAppStateProps(prevProps.appState as AppState),
+    getRelevantAppStateProps(nextProps.appState as AppState),
   );
 };
 

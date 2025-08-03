@@ -3,13 +3,11 @@ import { isShallowEqual } from "@excalidraw/common";
 import { isGridModeEnabled } from "@excalidraw/excalidraw/snapping";
 
 import type App from "@excalidraw/excalidraw/components/App";
-import type { Scene } from "@excalidraw/element";
 import type {
   NonDeletedExcalidrawElement,
   NonDeletedSceneElementsMap,
 } from "@excalidraw/element/types";
 
-import { isRenderThrottlingEnabled } from "../../reactUtils";
 import { renderStaticScene } from "../../renderer/staticScene";
 
 import type {
@@ -48,71 +46,66 @@ const StaticCanvas = (props: StaticCanvasProps) => {
   }, [app.canvas]);
 
   useEffect(() => {
-    const unsub = excalidrawAPI.onRenderTrigger(
-      (appState: AppState, scene: Scene) => {
-        if (
-          appState.height !== renderingProps.current?.appState.height ||
-          appState.width !== renderingProps.current?.appState.width
-        ) {
-          app.canvas.style.width = `${appState.width}px`;
-          app.canvas.style.height = `${appState.height}px`;
-          app.canvas.width = appState.width * scale;
-          app.canvas.height = appState.height * scale;
-        }
+    const unsub = excalidrawAPI.onRenderTrigger((appState: AppState) => {
+      if (
+        appState.height !== renderingProps.current?.appState.height ||
+        appState.width !== renderingProps.current?.appState.width
+      ) {
+        app.canvas.style.width = `${appState.width}px`;
+        app.canvas.style.height = `${appState.height}px`;
+        app.canvas.width = appState.width * scale;
+        app.canvas.height = appState.height * scale;
+      }
 
-        const { elementsMap, visibleElements } =
-          app.renderer.getRenderableElements({
-            sceneNonce: scene.getSceneNonce(),
-            zoom: appState.zoom,
-            offsetLeft: appState.offsetLeft,
-            offsetTop: appState.offsetTop,
-            scrollX: appState.scrollX,
-            scrollY: appState.scrollY,
-            height: appState.height,
-            width: appState.width,
-            editingTextElement: appState.editingTextElement,
-            newElementId: appState.newElement?.id,
-          });
+      const { elementsMap, visibleElements } =
+        app.renderer.getRenderableElements({
+          sceneNonce: app.scene.getSceneNonce(),
+          zoom: appState.zoom,
+          offsetLeft: appState.offsetLeft,
+          offsetTop: appState.offsetTop,
+          scrollX: appState.scrollX,
+          scrollY: appState.scrollY,
+          height: appState.height,
+          width: appState.width,
+          editingTextElement: appState.editingTextElement,
+          newElementId: appState.newElement?.id,
+        });
 
-        const nextRenderingProps = {
-          allElementsMap: scene.getNonDeletedElementsMap(),
-          visibleElements,
-          appState,
-          elementsMap,
-          sceneNonce: scene.getSceneNonce(),
-          selectionNonce: appState.selectionElement?.versionNonce,
-          renderConfig: {
-            imageCache: app.imageCache,
-            isExporting: false,
-            renderGrid: isGridModeEnabled({
-              props: { gridModeEnabled: app.props.gridModeEnabled },
-              state: { gridModeEnabled: appState.gridModeEnabled },
-            }),
-            canvasBackgroundColor: appState.viewBackgroundColor,
-            embedsValidationStatus: app.embedsValidationStatus,
-            elementsPendingErasure: app.elementsPendingErasure,
-            pendingFlowchartNodes: app.flowChartCreator.pendingNodes,
-          },
-        };
+      const nextRenderingProps = {
+        allElementsMap: app.scene.getNonDeletedElementsMap(),
+        visibleElements,
+        appState,
+        elementsMap,
+        sceneNonce: app.scene.getSceneNonce(),
+        selectionNonce: appState.selectionElement?.versionNonce,
+        renderConfig: {
+          imageCache: app.imageCache,
+          isExporting: false,
+          renderGrid: isGridModeEnabled({
+            props: { gridModeEnabled: app.props.gridModeEnabled },
+            state: { gridModeEnabled: appState.gridModeEnabled },
+          }),
+          canvasBackgroundColor: appState.viewBackgroundColor,
+          embedsValidationStatus: app.embedsValidationStatus,
+          elementsPendingErasure: app.elementsPendingErasure,
+          pendingFlowchartNodes: app.flowChartCreator.pendingNodes,
+        },
+      };
 
-        if (
-          !renderingProps.current ||
-          areRenderingPropsEqual(renderingProps.current, nextRenderingProps)
-        ) {
-          renderStaticScene(
-            {
-              ...nextRenderingProps,
-              canvas: app.canvas,
-              rc: app.rc,
-              scale,
-            },
-            isRenderThrottlingEnabled(),
-          );
-        }
+      if (
+        !renderingProps.current ||
+        areRenderingPropsEqual(renderingProps.current, nextRenderingProps)
+      ) {
+        renderStaticScene({
+          ...nextRenderingProps,
+          canvas: app.canvas,
+          rc: app.rc,
+          scale,
+        });
+      }
 
-        renderingProps.current = nextRenderingProps;
-      },
-    );
+      renderingProps.current = nextRenderingProps;
+    });
     return unsub;
   }, [app, scale]);
 

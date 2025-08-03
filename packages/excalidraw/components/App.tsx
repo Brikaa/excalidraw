@@ -625,6 +625,8 @@ class App extends React.Component<AppProps, AppState> {
     ]
   >();
 
+  onRenderTriggerEmitter = new Emitter<[appState: AppState]>();
+
   onPointerDownEmitter = new Emitter<
     [
       activeTool: AppState["activeTool"],

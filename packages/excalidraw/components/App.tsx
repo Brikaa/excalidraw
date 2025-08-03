@@ -589,7 +589,7 @@ class App extends React.Component<AppProps, AppState> {
    * Initially or on url change the flag is not reset so that we can guarantee
    * the validation came from a trusted source (the editor).
    **/
-  private embedsValidationStatus: EmbedsValidationStatus = new Map();
+  public embedsValidationStatus: EmbedsValidationStatus = new Map();
   /** embeds that have been inserted to DOM (as a perf optim, we don't want to
    * insert to DOM before user initially scrolls to them) */
   private initializedEmbeds = new Set<ExcalidrawIframeLikeElement["id"]>();
@@ -598,7 +598,7 @@ class App extends React.Component<AppProps, AppState> {
     this.setToast(null);
   };
 
-  private elementsPendingErasure: ElementsPendingErasure = new Set();
+  public elementsPendingErasure: ElementsPendingErasure = new Set();
 
   public flowChartCreator: FlowChartCreator = new FlowChartCreator();
   private flowChartNavigator: FlowChartNavigator = new FlowChartNavigator();
@@ -1736,31 +1736,7 @@ class App extends React.Component<AppProps, AppState> {
                             }}
                           />
                         )}
-                        <StaticCanvas
-                          renderer={this.renderer}
-                          canvas={this.canvas}
-                          rc={this.rc}
-                          elementsMap={elementsMap}
-                          allElementsMap={allElementsMap}
-                          visibleElements={visibleElements}
-                          sceneNonce={sceneNonce}
-                          selectionNonce={
-                            this.state.selectionElement?.versionNonce
-                          }
-                          scale={window.devicePixelRatio}
-                          appState={this.state}
-                          renderConfig={{
-                            imageCache: this.imageCache,
-                            isExporting: false,
-                            renderGrid: isGridModeEnabled(this),
-                            canvasBackgroundColor:
-                              this.state.viewBackgroundColor,
-                            embedsValidationStatus: this.embedsValidationStatus,
-                            elementsPendingErasure: this.elementsPendingErasure,
-                            pendingFlowchartNodes:
-                              this.flowChartCreator.pendingNodes,
-                          }}
-                        />
+                        <StaticCanvas app={this} />
                         {this.state.newElement && (
                           <NewElementCanvas
                             appState={this.state}

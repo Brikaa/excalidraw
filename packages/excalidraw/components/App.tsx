@@ -1737,6 +1737,7 @@ class App extends React.Component<AppProps, AppState> {
                           />
                         )}
                         <StaticCanvas
+                          renderer={this.renderer}
                           canvas={this.canvas}
                           rc={this.rc}
                           elementsMap={elementsMap}

@@ -2,6 +2,10 @@ import React, { useEffect, useRef } from "react";
 
 import { isShallowEqual } from "@excalidraw/common";
 
+import type { Renderer } from "@excalidraw/excalidraw/scene/Renderer";
+
+import type { Scene } from "@excalidraw/element";
+
 import type {
   NonDeletedExcalidrawElement,
   NonDeletedSceneElementsMap,
@@ -18,28 +22,25 @@ import type { AppState, StaticCanvasAppState } from "../../types";
 import type { RoughCanvas } from "roughjs/bin/canvas";
 
 type StaticCanvasProps = {
+  renderer: Renderer;
   canvas: HTMLCanvasElement;
   rc: RoughCanvas;
+  scale: number;
+  renderConfig: StaticCanvasRenderConfig;
+};
+
+type RenderingProps = StaticCanvasProps & {
   elementsMap: RenderableElementsMap;
   allElementsMap: NonDeletedSceneElementsMap;
   visibleElements: readonly NonDeletedExcalidrawElement[];
   sceneNonce: number | undefined;
   selectionNonce: number | undefined;
-  scale: number;
   appState: StaticCanvasAppState;
-  renderConfig: StaticCanvasRenderConfig;
 };
 
 const StaticCanvas = (props: StaticCanvasProps) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const isComponentMounted = useRef(false);
-
-  useEffect(() => {
-    props.canvas.style.width = `${props.appState.width}px`;
-    props.canvas.style.height = `${props.appState.height}px`;
-    props.canvas.width = props.appState.width * props.scale;
-    props.canvas.height = props.appState.height * props.scale;
-  }, [props.appState.height, props.appState.width, props.canvas, props.scale]);
+  const prevProps = useRef<RenderingProps | null>(null);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -49,27 +50,75 @@ const StaticCanvas = (props: StaticCanvasProps) => {
 
     const canvas = props.canvas;
 
-    if (!isComponentMounted.current) {
-      isComponentMounted.current = true;
+    wrapper.replaceChildren(canvas);
+    canvas.classList.add("excalidraw__canvas", "static");
+  }, [props.canvas]);
 
-      wrapper.replaceChildren(canvas);
-      canvas.classList.add("excalidraw__canvas", "static");
-    }
+  useEffect(() => {
+    const unsub = excalidrawAPI.onRenderTrigger(
+      (appState: AppState, scene: Scene) => {
+        if (
+          prevProps.current &&
+          (appState.height !== prevProps.current.appState.height ||
+            appState.width !== prevProps.current.appState.width ||
+            props.canvas !== prevProps.current.canvas ||
+            props.scale !== prevProps.current.scale)
+        ) {
+          props.canvas.style.width = `${appState.width}px`;
+          props.canvas.style.height = `${appState.height}px`;
+          props.canvas.width = appState.width * props.scale;
+          props.canvas.height = appState.height * props.scale;
+        }
 
-    renderStaticScene(
-      {
-        canvas,
-        rc: props.rc,
-        scale: props.scale,
-        elementsMap: props.elementsMap,
-        allElementsMap: props.allElementsMap,
-        visibleElements: props.visibleElements,
-        appState: props.appState,
-        renderConfig: props.renderConfig,
+        const { elementsMap, visibleElements } =
+          props.renderer.getRenderableElements({
+            sceneNonce: scene.getSceneNonce(),
+            zoom: appState.zoom,
+            offsetLeft: appState.offsetLeft,
+            offsetTop: appState.offsetTop,
+            scrollX: appState.scrollX,
+            scrollY: appState.scrollY,
+            height: appState.height,
+            width: appState.width,
+            editingTextElement: appState.editingTextElement,
+            newElementId: appState.newElement?.id,
+          });
+
+        const currentProps = {
+          allElementsMap: scene.getNonDeletedElementsMap(),
+          visibleElements,
+          appState,
+          canvas: props.canvas,
+          elementsMap,
+          rc: props.rc,
+          renderConfig: props.renderConfig,
+          renderer: props.renderer,
+          scale: props.scale,
+          sceneNonce: scene.getSceneNonce(),
+          selectionNonce: appState.selectionElement?.versionNonce,
+        };
+
+        if (!prevProps.current || areEqual(prevProps.current, currentProps)) {
+          renderStaticScene(
+            {
+              canvas: currentProps.canvas,
+              rc: currentProps.rc,
+              scale: currentProps.scale,
+              elementsMap: currentProps.elementsMap,
+              allElementsMap: currentProps.allElementsMap,
+              visibleElements: currentProps.visibleElements,
+              appState: currentProps.appState,
+              renderConfig: currentProps.renderConfig,
+            },
+            isRenderThrottlingEnabled(),
+          );
+        }
+
+        prevProps.current = currentProps;
       },
-      isRenderThrottlingEnabled(),
     );
-  });
+    return unsub;
+  }, [props.canvas, props.rc, props.renderConfig, props.renderer, props.scale]);
 
   return <div className="excalidraw__canvas-wrapper" ref={wrapperRef} />;
 };
@@ -104,10 +153,7 @@ const getRelevantAppStateProps = (appState: AppState): StaticCanvasAppState => {
   return relevantAppStateProps;
 };
 
-const areEqual = (
-  prevProps: StaticCanvasProps,
-  nextProps: StaticCanvasProps,
-) => {
+const areEqual = (prevProps: RenderingProps, nextProps: RenderingProps) => {
   if (
     prevProps.sceneNonce !== nextProps.sceneNonce ||
     prevProps.scale !== nextProps.scale ||
@@ -130,4 +176,16 @@ const areEqual = (
   );
 };
 
-export default React.memo(StaticCanvas, areEqual);
+const arePropsEqual = (
+  prevProps: StaticCanvasProps,
+  nextProps: StaticCanvasProps,
+) => {
+  const { renderConfig: prevRenderConfig, ...prevRest } = prevProps;
+  const { renderConfig: nextRenderConfig, ...nextRest } = nextProps;
+  return (
+    isShallowEqual(prevRest, nextRest) &&
+    isShallowEqual(prevRenderConfig, nextRenderConfig)
+  );
+};
+
+export default React.memo(StaticCanvas, arePropsEqual);

@@ -116,7 +116,7 @@ export const getFontString = ({
   fontSize: number;
   fontFamily: FontFamilyValues;
 }) => {
-  return `${fontSize}px ${getFontFamilyString({ fontFamily })}` as FontString;
+  return `${fontSize}px Arial` as FontString;
 };
 
 export const debounce = <T extends any[]>(

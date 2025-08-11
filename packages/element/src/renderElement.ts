@@ -500,7 +500,7 @@ const drawElementOnCanvas = (
         context.save();
         context.font = getFontString(element);
         context.fillStyle = element.strokeColor;
-        context.textAlign = element.textAlign as CanvasTextAlign;
+        context.textAlign = "left" as CanvasTextAlign;
 
         // Canvas does not support multiline text by default
         const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
@@ -523,12 +523,10 @@ const drawElementOnCanvas = (
           lineHeightPx,
         );
 
+        context.resetTransform();
+        console.log(horizontalOffset, lineHeightPx + verticalOffset);
         for (let index = 0; index < lines.length; index++) {
-          context.fillText(
-            lines[index],
-            horizontalOffset,
-            index * lineHeightPx + verticalOffset,
-          );
+          context.fillText(lines[index], 0, 80);
         }
         context.restore();
         if (shouldTemporarilyAttach) {
@@ -618,7 +616,8 @@ const drawElementFromCanvas = (
   const cy = ((y1 + y2) / 2 + appState.scrollY) * window.devicePixelRatio;
 
   context.save();
-  context.scale(1 / window.devicePixelRatio, 1 / window.devicePixelRatio);
+  context.resetTransform();
+  // context.scale(1 / window.devicePixelRatio, 1 / window.devicePixelRatio);
 
   const boundTextElement = getBoundTextElement(element, allElementsMap);
 
@@ -659,15 +658,10 @@ const drawElementFromCanvas = (
     // revert afterwards we don't have account for it during drawing
     context.translate(-cx, -cy);
 
-    context.drawImage(
-      elementWithCanvas.canvas!,
-      (x1 + appState.scrollX) * window.devicePixelRatio -
-        (padding * elementWithCanvas.scale) / elementWithCanvas.scale,
-      (y1 + appState.scrollY) * window.devicePixelRatio -
-        (padding * elementWithCanvas.scale) / elementWithCanvas.scale,
-      elementWithCanvas.canvas!.width / elementWithCanvas.scale,
-      elementWithCanvas.canvas!.height / elementWithCanvas.scale,
-    );
+    context.drawImage(elementWithCanvas.canvas!, 500, 417);
+    context.drawImage(elementWithCanvas.canvas!, 400.2, 417.2);
+    context.drawImage(elementWithCanvas.canvas!, 300.5, 417.5);
+    context.drawImage(elementWithCanvas.canvas!, 200, 417);
 
     if (
       import.meta.env.VITE_APP_DEBUG_ENABLE_TEXT_CONTAINER_BOUNDING_BOX ===

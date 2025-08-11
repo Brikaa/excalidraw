@@ -524,7 +524,6 @@ const drawElementOnCanvas = (
         );
 
         context.resetTransform();
-        console.log(horizontalOffset, lineHeightPx + verticalOffset);
         for (let index = 0; index < lines.length; index++) {
           context.fillText(lines[index], 0, 80);
         }
@@ -658,6 +657,12 @@ const drawElementFromCanvas = (
     // revert afterwards we don't have account for it during drawing
     context.translate(-cx, -cy);
 
+    // Text: ASD, size: 36px, font-family: Arial, color: #1e1e1e, expected width, height = (110, 81)
+    // devicePixelRatio: 1
+    console.log(
+      elementWithCanvas.canvas!.width,
+      elementWithCanvas.canvas!.height,
+    );
     context.drawImage(elementWithCanvas.canvas!, 500, 417);
     context.drawImage(elementWithCanvas.canvas!, 400.2, 417.2);
     context.drawImage(elementWithCanvas.canvas!, 300.5, 417.5);

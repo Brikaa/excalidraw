@@ -50,6 +50,7 @@ import { getElementShape } from "./shape";
 import {
   deconstructDiamondElement,
   deconstructRectanguloidElement,
+  getFreeDrawActualStrokeWidth,
 } from "./utils";
 
 import type { Drawable, Op } from "roughjs/bin/core";
@@ -167,6 +168,7 @@ export class ElementBounds {
       elementsMap,
     );
     if (isFreeDrawElement(element)) {
+      const offset = getFreeDrawActualStrokeWidth(element) / 2;
       const [minX, minY, maxX, maxY] = getBoundsFromPoints(
         element.points.map(([x, y]) =>
           pointRotateRads(
@@ -178,10 +180,10 @@ export class ElementBounds {
       );
 
       return [
-        minX + element.x,
-        minY + element.y,
-        maxX + element.x,
-        maxY + element.y,
+        minX + element.x - offset,
+        minY + element.y - offset,
+        maxX + element.x + offset,
+        maxY + element.y + offset,
       ];
     } else if (isLinearElement(element)) {
       bounds = getLinearElementRotatedBounds(element, cx, cy, elementsMap);
@@ -687,10 +689,11 @@ const getFreeDrawElementAbsoluteCoords = (
   element: ExcalidrawFreeDrawElement,
 ): [number, number, number, number, number, number] => {
   const [minX, minY, maxX, maxY] = getBoundsFromPoints(element.points);
-  const x1 = minX + element.x;
-  const y1 = minY + element.y;
-  const x2 = maxX + element.x;
-  const y2 = maxY + element.y;
+  const offset = getFreeDrawActualStrokeWidth(element) / 2;
+  const x1 = minX + element.x - offset;
+  const y1 = minY + element.y - offset;
+  const x2 = maxX + element.x + offset;
+  const y2 = maxY + element.y + offset;
   return [x1, y1, x2, y2, (x1 + x2) / 2, (y1 + y2) / 2];
 };
 

@@ -481,3 +481,7 @@ export const getCornerRadius = (x: number, element: ExcalidrawElement) => {
 
   return 0;
 };
+
+export const getFreeDrawActualStrokeWidth = (
+  element: ExcalidrawFreeDrawElement,
+) => element.strokeWidth * 4.25;

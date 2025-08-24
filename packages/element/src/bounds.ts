@@ -591,6 +591,8 @@ export const getCubicBezierCurveBound = (
   p1: GlobalPoint,
   p2: GlobalPoint,
   p3: GlobalPoint,
+  offsetX: number = 0,
+  offsetY: number = 0,
 ): Bounds => {
   const solX = solveQuadratic(p0[0], p1[0], p2[0], p3[0]);
   const solY = solveQuadratic(p0[1], p1[1], p2[1], p3[1]);
@@ -611,7 +613,7 @@ export const getCubicBezierCurveBound = (
     minY = Math.min(minY, ...ys);
     maxY = Math.max(maxY, ...ys);
   }
-  return [minX, minY, maxX, maxY];
+  return [minX - offsetX, minY - offsetY, maxX + offsetX, maxY + offsetY];
 };
 
 export const getMinMaxXYFromCurvePathOps = (

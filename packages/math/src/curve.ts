@@ -101,7 +101,7 @@ export const bezierEquation = <Point extends GlobalPoint | LocalPoint>(
  */
 export function curveIntersectLineSegment<
   Point extends GlobalPoint | LocalPoint,
->(c: Curve<Point>, l: LineSegment<Point>): Point[] {
+>(c: Curve<Point>, l: LineSegment<Point>, offset: number = 0): Point[] {
   const line = (s: number) =>
     pointFrom<Point>(
       l[0][0] + s * (l[1][0] - l[0][0]),
@@ -117,7 +117,10 @@ export function curveIntersectLineSegment<
   const calculate = ([t0, s0]: [number, number]) => {
     const solution = solve(
       (t: number, s: number) => {
-        const bezier_point = bezierEquation(c, t);
+        const raw = bezierEquation(c, t);
+        const tangent = vectorNormalize(curveTangent(c, t));
+        const normal = vectorNormal(tangent);
+        const bezier_point = pointFromVector(vectorScale(normal, offset), raw);
         const line_point = line(s);
 
         return [

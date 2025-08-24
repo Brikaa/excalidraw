@@ -27,7 +27,7 @@ import type {
 
 import type { FrameNameBounds } from "@excalidraw/excalidraw/types";
 
-import { isPathALoop } from "./utils";
+import { getFreeDrawActualStrokeWidth, isPathALoop } from "./utils";
 import {
   type Bounds,
   doBoundsIntersect,
@@ -328,6 +328,9 @@ const intersectLinearOrFreeDrawWithLineSegment = (
 ): GlobalPoint[] => {
   // NOTE: This is the only one which return the decomposed elements
   // rotated! This is due to taking advantage of roughjs definitions.
+  const offset = isFreeDrawElement(element)
+    ? getFreeDrawActualStrokeWidth(element) / 2
+    : 0;
   const [lines, curves] = deconstructLinearOrFreeDrawElement(element);
   const intersections: GlobalPoint[] = [];
 
@@ -344,7 +347,7 @@ const intersectLinearOrFreeDrawWithLineSegment = (
 
   for (const c of curves) {
     // Optimize by doing a cheap bounding box check first
-    const b1 = getCubicBezierCurveBound(c[0], c[1], c[2], c[3]);
+    const b1 = getCubicBezierCurveBound(c[0], c[1], c[2], c[3], offset, offset);
     const b2 = [
       Math.min(segment[0][0], segment[1][0]),
       Math.min(segment[0][1], segment[1][1]),
@@ -356,7 +359,10 @@ const intersectLinearOrFreeDrawWithLineSegment = (
       continue;
     }
 
-    const hits = curveIntersectLineSegment(c, segment);
+    const hits = [
+      ...curveIntersectLineSegment(c, segment, offset),
+      ...curveIntersectLineSegment(c, segment, -offset),
+    ];
 
     if (hits.length > 0) {
       intersections.push(...hits);
